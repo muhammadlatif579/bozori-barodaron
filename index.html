@@ -1,10 +1,21 @@
+
 <!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><title>Бозори Бародарон</title></head>
-<body style="text-align:center;font-family:Arial">
-<h1>БОЗОРИ БАРОДАРОН</h1>
-<img src="IMG-20261023-WA000.jpg" style="width:100%">
-<h2>Куртка 350 СОМ</h2>
-<a href="https://wa.me/992000000000" style="background:green;color:white;padding:15px;display:block">WhatsApp</a>
+<html lang="tg">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Бозори Бародарон</title>
+<style>body{font-family:sans-serif;background:#f5f7fb;margin:0;padding:15px;text-align:center}.lang button{padding:8px 15px;border:1px solid #0d6efd;background:white;border-radius:8px;margin:0 5px}.lang button.active{background:#0d6efd;color:white}.card{background:white;max-width:500px;margin:20px auto;border-radius:20px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.1)}.card img{width:100%;border-radius:15px}.price{color:#e60000;font-size:26px;font-weight:bold;margin:15px 0}.btn{display:block;background:#25D366;color:white;text-decoration:none;padding:16px;border-radius:12px;font-size:18px;font-weight:bold;margin-top:15px}</style>
+</head>
+<body>
+<div><button id="b1" class="lang active" onclick="L('tj')" style="padding:8px 15px;border-radius:8px">🇹🇯 TJ</button><button id="b2" onclick="L('ru')" style="padding:8px 15px;border-radius:8px">🇷🇺 RU</button></div>
+<div class="card">
+<img src="IMG-20261023-WA0000.jpg" alt="mahsulot">
+<h1 id="t">Маҷмӯи Кӯдакона</h1>
+<p id="d">Куртка 350 СОМ + Пойафзол + Трактор</p>
+<div class="price" id="p">Нарх: 199 сомонӣ</div>
+<a id="w" class="btn" href="https://wa.me/992930990895?text=Салом! Мехоҳам фармоиш диҳам">📲 Фармоиш дар WhatsApp 93 099 08 95</a>
+</div>
+<script>
+const A={tj:{t:"Маҷмӯи Кӯдакона",d:"👟 Пойафзол + 👗 Либос + 🚚 Трактор<br>Куртка 350 СОМ",p:"Нарх: 199 сомонӣ",w:"📲 Фармоиш дар WhatsApp 93 099 08 95",l:"https://wa.me/992930990895?text=Салом! Мехоҳам фармоиш диҳам"},ru:{t:"Детский Набор",d:"👟 Кроссовки + 👗 Платье + 🚚 Грузовик<br>Куртка 350 СОМ",p:"Цена: 199 сомони",w:"📲 Заказать в WhatsApp 93 099 08 95",l:"https://wa.me/992930990895?text=Здравствуйте! Хочу заказать"}};
+function L(x){document.getElementById('t').innerHTML=A[x].t;document.getElementById('d').innerHTML=A[x].d;document.getElementById('p').innerHTML=A[x].p;document.getElementById('w').innerHTML=A[x].w;document.getElementById('w').href=A[x].l;}
+</script>
 </body>
 </html>
