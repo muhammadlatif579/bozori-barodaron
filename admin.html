@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="tg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Идоракунии Бозори Бародарон</title>
+<style>
+body{font-family:sans-serif;padding:15px;background:#f5f5f5}
+.box{background:white;padding:15px;border-radius:10px;margin-bottom:15px}
+input,button{width:100%;padding:12px;margin:5px 0;border-radius:8px;border:1px solid #ccc}
+button{background:#25D366;color:white;font-weight:bold;border:none}
+</style>
+</head>
+<body>
+<h2>Бозори Бародарон - Панели Идоракунӣ</h2>
+<div class="box">
+<h3>Маҳсулоти нав илова кун</h3>
+<input id="nom" placeholder="Номи маҳсулот">
+<input id="narx" type="number" placeholder="Нарх">
+<input id="rasm" placeholder="Линки расм">
+<button onclick="ilova()">Илова кардан</button>
+</div>
+<div class="box" id="ruyxat"></div>
+<script>
+let m=JSON.parse(localStorage.getItem('mahsulot')||'[]');
+function ilova(){
+let n={nom:nom.value,narx:narx.value,rasm:rasm.value};
+m.push(n);localStorage.setItem('mahsulot',JSON.stringify(m));namoyish();
+nom.value='';narx.value='';rasm.value='';
+}
+function namoyish(){
+ruyxat.innerHTML=m.map((x,i)=>`<p>${i+1}. ${x.nom} - ${x.narx} сом</p>`).join('');
+}
+namoyish();
+</script>
+</body>
+</html>
