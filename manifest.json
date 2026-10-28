@@ -1,0 +1,16 @@
+{
+  "name": "ҚУРБОНИЁН",
+  "short_name": "ҚУРБОНИЁН",
+  "description": "Бозори Бародарон - Мағозаи онлайни либоси кӯдакона ва калонсолон",
+  "start_url": "/bozori-barodaron/",
+  "display": "standalone",
+  "background_color": "#4B1D8F",
+  "theme_color": "#4B1D8F",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
