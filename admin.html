@@ -3,35 +3,52 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Идоракунии Бозори Бародарон</title>
-<style>
-body{font-family:sans-serif;padding:15px;background:#f5f5f5}
-.box{background:white;padding:15px;border-radius:10px;margin-bottom:15px}
-input,button{width:100%;padding:12px;margin:5px 0;border-radius:8px;border:1px solid #ccc}
-button{background:#25D366;color:white;font-weight:bold;border:none}
-</style>
+<title>Админка - Бозори Бародарон</title>
+<style>body{font-family:sans-serif;background:#f5f5f5;padding:15px}input{width:100%;padding:12px;margin:5px 0;border-radius:10px;border:1px solid #ccc;box-sizing:border-box}button{width:100%;padding:13px;background:#4B1D8F;color:white;border:none;border-radius:10px;font-weight:bold;margin-top:10px}.item{background:white;padding:10px;margin:10px 0;border-radius:10px}.item img{width:100%;border-radius:10px}.del{background:red}</style>
 </head>
 <body>
-<h2>Бозори Бародарон - Панели Идоракунӣ</h2>
-<div class="box">
-<h3>Маҳсулоти нав илова кун</h3>
-<input id="nom" placeholder="Номи маҳсулот">
-<input id="narx" type="number" placeholder="Нарх">
-<input id="rasm" placeholder="Линки расм">
+<h2 style="text-align:center">Илова кардани мол</h2>
+<input id="nom" placeholder="Номи мол - масалан: Кроссовкаи занона">
+<input id="narx" placeholder="Нарх - масалан: 75" type="number">
+<input id="tavsif" placeholder="Тавсиф - масалан: Размери 36-40">
+<input id="rasm" placeholder="Линки расм аз imgbb">
 <button onclick="ilova()">Илова кардан</button>
-</div>
-<div class="box" id="ruyxat"></div>
+
+<h3>Молҳои сабтшуда:</h3>
+<div id="ruyxat"></div>
+
 <script>
-let m=JSON.parse(localStorage.getItem('mahsulot')||'[]');
+function nishon(){
+  let data = JSON.parse(localStorage.getItem('mahsulotlar')) || [];
+  let j = document.getElementById('ruyxat');
+  j.innerHTML = "";
+  data.forEach((m,i)=>{
+    j.innerHTML += `<div class="item"><img src="${m.rasm}"><b>${m.nom} - ${m.narx} сом</b><p>${m.tavsif}</p><button class="del" onclick="neist(${i})">Нест кардан</button></div>`;
+  });
+}
 function ilova(){
-let n={nom:nom.value,narx:narx.value,rasm:rasm.value};
-m.push(n);localStorage.setItem('mahsulot',JSON.stringify(m));namoyish();
-nom.value='';narx.value='';rasm.value='';
+  let nom = document.getElementById('nom').value;
+  let narx = document.getElementById('narx').value;
+  let tavsif = document.getElementById('tavsif').value;
+  let rasm = document.getElementById('rasm').value;
+  if(!nom || !narx || !rasm){ alert("Ном, нарх ва линки расмро нависед!"); return; }
+  let data = JSON.parse(localStorage.getItem('mahsulotlar')) || [];
+  data.push({nom:nom, narx:narx, tavsif:tavsif, rasm:rasm});
+  localStorage.setItem('mahsulotlar', JSON.stringify(data));
+  document.getElementById('nom').value="";
+  document.getElementById('narx').value="";
+  document.getElementById('tavsif').value="";
+  document.getElementById('rasm').value="";
+  alert("Сабт шуд!");
+  nishon();
 }
-function namoyish(){
-ruyxat.innerHTML=m.map((x,i)=>`<p>${i+1}. ${x.nom} - ${x.narx} сом</p>`).join('');
+function neist(i){
+  let data = JSON.parse(localStorage.getItem('mahsulotlar')) || [];
+  data.splice(i,1);
+  localStorage.setItem('mahsulotlar', JSON.stringify(data));
+  nishon();
 }
-namoyish();
+nishon();
 </script>
 </body>
 </html>
