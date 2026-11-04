@@ -3,24 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Бозори Бародарон - ҚУРБОНИЁН</title>
+<title>Бозори Бародарон - КУРБОНИЁН</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#4B1D8F">
-<style>body{font-family:sans-serif;background:#f5f5f5;margin:0;padding:20px;text-align:center} .card{background:white;border-radius:15px;padding:20px;max-width:400px;margin:auto;box-shadow:0 4px 10px rgba(0,0,0,0.1)} img{width:100%;border-radius:10px} .price{font-size:22px;font-weight:bold;color:#4B1D8F;margin:10px 0} .btn{display:block;background:#25D366;color:white;padding:15px;border-radius:10px;text-decoration:none;font-weight:bold;margin-top:15px} .lang{margin-bottom:15px} .lang button{padding:5px 10px;margin:0 5px}</style>
+<style>body{font-family:sans-serif;background:#f5f5f5;margin:0;padding:10px}h1{text-align:center;color:#4B1D8F}.card{background:white;padding:15px;margin:10px 0;border-radius:15px;text-align:center;box-shadow:0 2px 8px #ccc}.card img{width:100%;border-radius:10px}.price{font-size:20px;font-weight:bold;color:green}.btn{background:#25D366;color:white;padding:12px;display:block;border-radius:10px;text-decoration:none;margin-top:10px;font-weight:bold}.lang{padding:8px 15px;margin:5px;border-radius:20px;border:1px solid #4B1D8F;background:white}.lang.active{background:#4B1D8F;color:white}</style>
 </head>
 <body>
-<div><button id="b1" class="lang active">Тоҷикӣ</button><button id="b2" class="lang">Русский</button></div>
-<div class="card">
-<img src="IMG-20261023-WA0000.jpg" alt="Маҷмуи кудакона">
-<h1 id="t">Маҷмуи Кудакона</h1>
-<p id="d">Куртка 350 COM + Пойафзол + Трико</p>
-<div class="price" id="p">Нарх: 199 сомонӣ</div>
-<a id="w" class="btn" href="https://wa.me/992930990895">WhatsApp - Фармоиш</a>
+
+<div style="text-align:center">
+<button id="b1" class="lang active" onclick="L('tj')">Тоҷикӣ</button>
+<button id="b2" class="lang" onclick="L('ru')">Русский</button>
 </div>
+
+<h1 id="t">Маҷмуи молу маҳсулотҳо</h1>
+<p style="text-align:center">Бозори Бародарон - КУРБОНИЁН</p>
+
+<div id="mahsulotlar"></div>
+
 <script>
-const A={tj:{t:"Маҷмуи Кудакона",d:"Куртка 350 COM + Пойафзол + Трико",p:"Нарх: 199 сомонӣ",w:"WhatsApp - Фармоиш"},ru:{t:"Детский Набор",d:"Куртка 350 COM + Обувь + Трико",p:"Цена: 199 сомони",w:"WhatsApp - Заказать"}};
-function L(x){document.getElementById('t').innerText=A[x].t;document.getElementById('d').innerText=A[x].d;document.getElementById('p').innerText=A[x].p;document.getElementById('w').innerText=A[x].w;}
-document.getElementById('b1').onclick=()=>L('tj');document.getElementById('b2').onclick=()=>L('ru');
+function L(x){
+  document.getElementById('b1').className='lang'+(x=='tj'?' active':'');
+  document.getElementById('b2').className='lang'+(x=='ru'?' active':'');
+  document.getElementById('t').innerText = x=='tj' ? 'Маҷмуи молу маҳсулотҳо' : 'Все товары';
+  show();
+}
+
+function show(){
+  let data = JSON.parse(localStorage.getItem('mahsulotlar')) || [];
+  let joy = document.getElementById('mahsulotlar');
+  joy.innerHTML = "";
+  if(data.length==0){
+    joy.innerHTML = "<p style='text-align:center'>Ҳозир мол нест. Дар админка мол илова кунед.</p>";
+    return;
+  }
+  data.forEach(m=>{
+    let nom = m.nom || m.name || "";
+    let tavsif = m.tavsif || m.desc || "";
+    let narx = m.narx || m.price || "";
+    let rasm = m.rasm || m.image || m.img || "";
+    joy.innerHTML += `<div class="card"><img src="${rasm}"><h1>${nom}</h1><p>${tavsif}</p><div class="price">Нарх: ${narx} сомонӣ</div><a class="btn" href="https://wa.me/992930900000?text=Салом, ${nom} -ро мехоҳам">WhatsApp - Фармоиш</a></div>`;
+  });
+}
+L('tj');
 </script>
 </body>
 </html>
