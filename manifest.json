@@ -1,23 +1,9 @@
 {
-  "name": "Бозори Бародарон",
-  "short_name": "Бозори Бародарон",
-  "description": "Бозори онлайни либос дар Точикистон",
-  "start_url": "/bozori-barodaron/",
+  "name": "Bozori Barodaron",
+  "short_name": "Bozori Barodaron",
+  "description": "Online magazin Bozori Barodaron",
+  "start_url": "/bozori-barodaron/index.html",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#4B1D8F",
-  "icons": [
-    {
-      "src":"IMG-20261105-WA0236.jpg",
-      "sizes": "192x192",
-      "type": "image/jpeg",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "IMG-20261105-WA8805.jpg",
-      "sizes": "512x512",
-      "type": "image/jpeg",
-      "purpose": "any maskable"
-    }
-  ]
+  "theme_color": "#111111"
 }
