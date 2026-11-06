@@ -16,7 +16,7 @@ let defaultProducts=[
 {name:"Красовкаи занона",price:75,cat:"zanona",imgs:["IMG-20261104-WA0097.jpg"]},
 ];
 let products = JSON.parse(localStorage.getItem("myProducts")||"null") || defaultProducts;
-let cats=[["hama","Ҳама"],["mardona","Мардона"],["zanona","Занона"]];
+let cats=[["hama","Ҳама"],["mardona","Мардона"],["zanona","Занона"],["kudakona","Кудакона"]];
 let cur="hama"; let cart=[]; let favs=[]; let curProd=null; let curIdx=0;
 function save(){localStorage.setItem("myProducts",JSON.stringify(products));}
 function renderCats(){document.getElementById("cats").innerHTML=cats.map(c=>`<button class="${cur==c[0]?'on':''}" onclick="setCat('${c[0]}')">${c[1]}</button>`).join("");}
