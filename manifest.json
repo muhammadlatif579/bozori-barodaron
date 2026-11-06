@@ -1,21 +1,23 @@
 {
-  "name": "Bozori Barodaron",
-  "short_name": "Bozori Barodaron",
-  "description": "Online magazin Bozori Barodaron",
+  "name": "Бозори Бародарон",
+  "short_name": "Бозори Бародарон",
+  "description": "Бозори Бародарон - Мағозаи онлайн",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#5b2080",
-  "theme_color": "#5b2080",
+  "background_color": "#ffffff",
+  "theme_color": "#7c3aed",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "icon-192.jpg",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/jpeg",
+      "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "icon-512.jpg",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/jpeg",
+      "purpose": "any"
     }
   ]
 }
