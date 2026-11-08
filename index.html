@@ -16,7 +16,8 @@ let defaultProducts=[
 {name:"Красовкаи занона",price:75,cat:"zanona",imgs:["IMG-20261104-WA0097.jpg"]},
 {name:"Красовкаи кудакона",price:69,cat:"kudakona",imgs:["https://i.ibb.co/Y4bk1wNp/rasm.jpg"]},
 ];
-let products = JSON.parse(localStorage.getItem("myProducts")||"null") || defaultProducts;
+let products = JSON.parse(localStorage.getItem("myProducts")||"null");
+if(!products || products.length==0){ products = defaultProducts; localStorage.setItem("myProducts", JSON.stringify(products)); }
 let cats=[["hama","Ҳама"],["mardona","Мардона"],["zanona","Занона"],["kudakona","Кудакона"]];
 let cur="hama"; let cart=[]; let favs=[]; let curProd=null; let curIdx=0;
 function save(){localStorage.setItem("myProducts",JSON.stringify(products));}
@@ -30,3 +31,25 @@ function openModal(name){curProd=products.find(p=>p.name==name);curIdx=0;updateM
 function updateModal(){document.getElementById("mImg").src=curProd.imgs[curIdx];document.getElementById("mName").innerText=curProd.name+" - "+curProd.price+" с.";document.getElementById("mCount").innerText=" "+(curIdx+1)+" / "+curProd.imgs.length+" ";}
 function nextImg(){curIdx=(curIdx+1)%curProd.imgs.length;updateModal();}
 function prevImg(){curIdx=(curIdx-1+curProd.imgs.length)%curProd.imgs.length;updateModal();}
+function closeModal(){document.getElementById("modal").style.display="none";}
+function addFromModal(){add(curProd.name);}
+function add(n){cart.push(n);document.getElementById("cnt").innerText=cart.length;alert(n+" ба сабад рафт!");}
+function order(){if(cart.length==0){alert("Сабад холӣ аст!");return;}let txt="Салом! Ман мехоҳам фармоиш диҳам:%0A"+cart.join("%0A");window.open("https://wa.me/992930990895?text="+txt);}
+document.getElementById("mImg").onclick=nextImg;
+function openAdmin(){document.getElementById("adminModal").style.display="block";document.getElementById("adminLogin").style.display="block";document.getElementById("adminPanel").style.display="none";}
+function closeAdmin(){document.getElementById("adminModal").style.display="none";}
+function checkPass(){if(document.getElementById("passInput").value==ADMIN_PASS){document.getElementById("adminLogin").style.display="none";document.getElementById("adminPanel").style.display="block";renderAdminList();}else{alert("Рамз нодуруст!");}}
+function renderAdminList(){document.getElementById("adminList").innerHTML=products.map((p,i)=>`<div style="display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:5px 0">${p.name} - ${p.price} с. <button class="delBtn" onclick="delProduct(${i})">🗑️ Нест кардан</button></div>`).join("");}
+function addProduct(){let n=document.getElementById("aName").value.trim();let pr=Number(document.getElementById("aPrice").value);let c=document.getElementById("aCat").value;let im=document.getElementById("aImg").value.trim();if(!n||!pr||!im){alert("Ҳамаашро пур кун! Ном, нарх, номи расм");return;}products.push({name:n,price:pr,cat:c,imgs:[im]});save();render();renderAdminList();alert(n+" илова шуд! ✅");document.getElementById("aName").value="";document.getElementById("aPrice").value="";document.getElementById("aImg").value="";}
+function delProduct(i){if(confirm("Нест кунам?")){products.splice(i,1);save();render();renderAdminList();}}
+function exportCode(){let code=products.map(p=>`{name:"${p.name}",price:${p.price},cat:"${p.cat}",imgs:["${p.imgs.join('","')}"]}`).join(",\n");document.getElementById("exportBox").style.display="block";document.getElementById("exportText").value=code;document.getElementById("exportText").select();document.execCommand("copy");alert("Код нусха шуд! Ҳозир дар GitHub дар index.html гузор!");}
+let tapCount=0; let lastTap=0;
+document.getElementById("secretHeader").addEventListener("click", function(){
+  let now = Date.now();
+  if(now - lastTap > 2000){ tapCount = 0; }
+  lastTap = now;
+  tapCount++;
+  if(tapCount >= 5){ tapCount = 0; openAdmin(); }
+});
+renderCats();render();
+</script></body></html>
