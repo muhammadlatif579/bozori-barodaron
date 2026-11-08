@@ -9,14 +9,13 @@
 <button id="cartBtn" onclick="order()">🛒 Сабад (<span id="cnt">0</span>) - Заказ додан</button>
 <div id="modal"><img id="mImg"><div id="mName" style="font-weight:bold;margin:10px"></div><div><button onclick="prevImg()">◀️ Пеш</button><span id="mCount"></span><button onclick="nextImg()">Баъд ▶️</button></div><div style="display:flex;gap:8px;margin-top:10px"><button onclick="addFromModal()" style="background:#facc15">Ба сабад</button><button onclick="closeModal()" style="background:#fff">✕ Пӯшидан</button></div></div>
 <div id="adminModal"><div id="adminBox"><h3>⚙️ Панели Админ</h3><div id="adminLogin"><p>Рамзро ворид кун:</p><input id="passInput" type="password" placeholder="Рамз"><br><button onclick="checkPass()" style="background:#7c3aed;color:#fff;width:100%">Ворид шудан</button><button onclick="closeAdmin()" style="background:#eee;width:100%">Пӯшидан</button></div><div id="adminPanel" style="display:none">
-<!-- === КАЛИДИ GITHUB - НАВ === -->
 <div style="background:#fff3cd;padding:12px;border-radius:12px;margin-bottom:10px;border:1px solid #facc15">
 <b>🔑 Калиди GitHub:</b><br><small>Фақат 1 бор гузор - дигар намепурсад! Ба касе надиҳ!</small>
 <input id="gh_token" type="password" placeholder="ghp_... - ро дар ин ҷо гузор" style="width:94%">
 <button onclick="saveToken()" style="background:#111;color:#fff;width:100%">Сахра кардани калид</button>
 <p id="tokenStatus" style="font-size:12px;margin:5px 0 0"></p>
 </div>
-<p><b>➕ Моли нав</b></p><input id="aName" placeholder="Номи мол - масалан Кофтаи занона"><input id="aPrice" type="number" placeholder="Нарх: масалан 80"><select id="aCat"><option value="mardona">Мардона</option><option value="zanona">Занона</option><option value="kudakona">Кудакона</option></select><p style="font-size:13px"><b>📸 Расм (1-то кифоя аст):</b></p><input id="aFiles" type="file" accept="image/*" onchange="previewImgs(this)"><div id="previewBox" style="display:flex;flex-wrap:wrap"></div><button id="addBtn" onclick="addProduct()" style="background:#22c55e;color:#fff;width:100%">➕ Илова кардан!</button><p id="saveStatus" style="text-align:center;font-weight:bold;font-size:13px"></p><hr><p><b>📋 Молҳои ҳозира:</b></p><div id="adminList"></div><hr><p><b>📤 Захира:</b></p><button onclick="showGitHubCode()" style="background:#000;color:#fff;width:100%">📋 Коди products.json-ро гирифтан</button><textarea id="copyBox" style="display:none" readonly></textarea><button id="copyBtn" onclick="copyCode()" style="background:#facc15;width:100%;display:none">📋 Копия кардан</button><button onclick="closeAdmin()" style="background:#eee;width:100%">✕ Пӯшидан</button></div></div></div>
+<p><b>➕ Моли нав</b></p><input id="aName" placeholder="Номи мол - масалан Кофтаи занона"><input id="aPrice" type="number" placeholder="Нарх: масалан 80"><select id="aCat"><option value="mardona">Мардона</option><option value="zanona">Занона</option><option value="kudakona">Кудакона</option></select><p style="font-size:13px"><b>📸 Расм (то 4-то - якҷоя интихоб кун!):</b></p><input id="aFiles" type="file" accept="image/*" multiple onchange="previewImgs(this)"><div id="previewBox" style="display:flex;flex-wrap:wrap"></div><button id="addBtn" onclick="addProduct()" style="background:#22c55e;color:#fff;width:100%">➕ Илова кардан!</button><p id="saveStatus" style="text-align:center;font-weight:bold;font-size:13px"></p><hr><p><b>📋 Молҳои ҳозира:</b></p><div id="adminList"></div><hr><p><b>📤 Захира:</b></p><button onclick="showGitHubCode()" style="background:#000;color:#fff;width:100%">📋 Коди products.json-ро гирифтан</button><textarea id="copyBox" style="display:none" readonly></textarea><button id="copyBtn" onclick="copyCode()" style="background:#facc15;width:100%;display:none">📋 Копия кардан</button><button onclick="closeAdmin()" style="background:#eee;width:100%">✕ Пӯшидан</button></div></div></div>
 <script>
 let ADMIN_PASS="01022008";
 let REPO="muhammadlatif579/bozori-barodaron";
@@ -52,8 +51,7 @@ function openAdmin(){document.getElementById("adminModal").style.display="block"
 function closeAdmin(){document.getElementById("adminModal").style.display="none";}
 function checkPass(){if(document.getElementById("passInput").value==ADMIN_PASS){document.getElementById("adminLogin").style.display="none";document.getElementById("adminPanel").style.display="block";document.getElementById("gh_token").value=ghToken;updateTokenStatus();renderAdminList();}else{alert("Рамз нодуруст!");}}
 function renderAdminList(){document.getElementById("adminList").innerHTML=products.map((p,i)=>`<div style="display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:5px 0">${p.name} - ${p.price} с. <button class="delBtn" onclick="delProduct(${i})">🗑️ Нест кардан</button></div>`).join("");}
-function previewImgs(input){tempImgs=[];document.getElementById("previewBox").innerHTML="";let files=[...input.files].slice(0,1);files.forEach(f=>{let r=new FileReader();r.onload=e=>{let img=new Image();img.onload=()=>{let c=document.createElement("canvas");let max=650;let w=img.width,h=img.height;if(w>max){h=h*max/w;w=max;}c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);let small=c.toDataURL("image/jpeg",0.75);tempImgs.push(small);document.getElementById("previewBox").innerHTML+=`<img src="${small}" class="thumb">`;};img.src=e.target.result;};r.readAsDataURL(f);});}
-// === GITHUB AUTO-SAVE - НАВ ===
+function previewImgs(input){tempImgs=[];document.getElementById("previewBox").innerHTML="";let files=[...input.files].slice(0,4);if(input.files.length>4){alert("Фақат 4 акс! Аввалин 4-то гирифта шуд!");}files.forEach(f=>{let r=new FileReader();r.onload=e=>{let img=new Image();img.onload=()=>{let c=document.createElement("canvas");let max=650;let w=img.width,h=img.height;if(w>max){h=h*max/w;w=max;}c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);let small=c.toDataURL("image/jpeg",0.75);tempImgs.push(small);document.getElementById("previewBox").innerHTML+=`<img src="${small}" class="thumb">`;};img.src=e.target.result;};r.readAsDataURL(f);});}
 function saveToken(){ghToken=document.getElementById("gh_token").value.trim();localStorage.setItem("gh_token",ghToken);updateTokenStatus();alert("Сахра шуд! ✅");}
 function updateTokenStatus(){let el=document.getElementById("tokenStatus");if(el)el.innerHTML=ghToken?"✅ Калид ҳаст - омода аст!":"❌ Калид нест - гузор!";}
 async function saveToGitHub(){
@@ -62,7 +60,6 @@ async function saveToGitHub(){
  try{
   let res=await fetch(`https://api.github.com/repos/${REPO}/contents/products.json`,{headers:{'Authorization':'token '+ghToken}});
   let data=await res.json();
-  // Дар products.json - формати кӯҳнаро нигоҳ медорем - imgs + img
   let toSave=products.map(p=>({name:p.name,price:p.price,cat:p.cat,imgs:p.imgs,img:p.imgs[0]}));
   let content=btoa(unescape(encodeURIComponent(JSON.stringify(toSave,null,2))));
   let put=await fetch(`https://api.github.com/repos/${REPO}/contents/products.json`,{method:'PUT',headers:{'Authorization':'token '+ghToken,'Content-Type':'application/json'},body:JSON.stringify({message:'Моли нав - Бозори Бародарон',content:content,sha:data.sha})});
@@ -86,7 +83,6 @@ function showGitHubCode(){let code=JSON.stringify(products.map(p=>({name:p.name,
 function copyCode(){let t=document.getElementById("copyBox");t.select();document.execCommand("copy");alert("Копия шуд! ✅");}
 let tapCount=0; let lastTap=0;
 document.getElementById("secretHeader").addEventListener("click", function(){let now=Date.now();if(now-lastTap>2000){tapCount=0;}lastTap=now;tapCount++;if(tapCount>=5){tapCount=0;openAdmin();}});
-// ===== ИН ҶОИ МУҲИМ - МОЛҲО АЗ GITHUB МЕОЯНД! =====
 fetch('https://raw.githubusercontent.com/muhammadlatif579/bozori-barodaron/main/products.json?t='+Date.now())
   .then(r=>r.json())
   .then(data=>{
