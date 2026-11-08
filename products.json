@@ -1,10 +1,7 @@
 [
-  {"name":"Соати мардона","price":55,"cat":"soat","img":"https://raw.githubusercontent.com/muhammadlatif579/bozori-barodaron/main/IMG-20261025-WA01.jpg"},
-  {"name":"Красовкаи мардона","price":75,"cat":"krasovka","img":"https://raw.githubusercontent.com/muhammadlatif579/bozori-barodaron/main/IMG-20261031-WA00.jpg"},
-  {"name":"Красовкаи занона","price":75,"cat":"krasovka","img":"https://raw.githubusercontent.com/muhammadlatif579/bozori-barodaron/main/IMG-20261104-WA09.jpg"},
-  {"name":"Красовкаи кудакона","price":69,"cat":"krasovka","img":"https://raw.githubusercontent.com/muhammadlatif579/bozori-barodaron/main/IMG-20261105-WA88.jpg"},
-  {"name":"Кофтаи занона","price":80,"cat":"libos","img":"https://raw.githubusercontent.com/muhammadlatif579/bozori-barodaron/main/IMG-20261106-WA83.jpg"},
-  {"name":"Коржинка","price":130,"cat":"libos","img":"https://raw.githubusercontent.com/muhammadlatif579/bozori-barodaron/main/IMG-20261106-WA92.jpg"},
-  {"name":"Красофка","price":75,"cat":"krasovka","img":"https://raw.githubusercontent.com/muhammadlatif579/bozori-barodaron/main/IMG-20261106-WA93.jpg"},
-  {"name":"Красофки","price":80,"cat":"krasovka","img":"https://raw.githubusercontent.com/muhammadlatif579/bozori-barodaron/main/IMG-20261106-WA94.jpg"}
+  {"name":"Соати мардона","price":55,"cat":"mardona","imgs":["IMG-20261025-WA0010.jpg","IMG-20261106-WA8372.jpg","IMG-20261106-WA9265.jpg","IMG-20261106-WA9532.jpg"]},
+  {"name":"Красовкаи мардона","price":75,"cat":"mardona","imgs":["IMG-20261031-WA0007.jpg"]},
+  {"name":"Красовкаи занона","price":75,"cat":"zanona","imgs":["IMG-20261104-WA0097.jpg"]},
+  {"name":"Красовкаи кудакона","price":69,"cat":"kudakona","imgs":["https://i.ibb.co/Y4bk1wNp/rasm.jpg"]},
+  {"name":"Кофтаи занона","price":80,"cat":"zanona","imgs":["IMG-20261108-WA0000.jpg"]}
 ]
