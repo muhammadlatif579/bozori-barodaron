@@ -1,15 +1,5 @@
 [
   {
-    "name": "Красовкаи кудакона",
-    "price": 69,
-    "oldPrice": null,
-    "cat": "kudakona",
-    "imgs": [
-      "https://i.ibb.co/Y4bk1wNp/rasm.jpg"
-    ],
-    "img": "https://i.ibb.co/Y4bk1wNp/rasm.jpg"
-  },
-  {
     "name": "Сифати баланд ва нархи арзон",
     "price": 85,
     "oldPrice": null,
@@ -187,5 +177,15 @@
       "IMG-20261104-WA0097.jpg"
     ],
     "img": "IMG-20261104-WA0097.jpg"
+  },
+  {
+    "name": "Красовкаи кудакона",
+    "price": 69,
+    "oldPrice": 90,
+    "cat": "kudakona",
+    "imgs": [
+      "https://i.ibb.co/Y4bk1wNp/rasm.jpg"
+    ],
+    "img": "https://i.ibb.co/Y4bk1wNp/rasm.jpg"
   }
 ]
