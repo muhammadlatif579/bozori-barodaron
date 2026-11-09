@@ -1,54 +1,21 @@
-<!DOCTYPE html>
-<html lang="tg">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Админка - Бозори Бародарон</title>
-<style>body{font-family:sans-serif;background:#f5f5f5;padding:15px}input{width:100%;padding:12px;margin:5px 0;border-radius:10px;border:1px solid #ccc;box-sizing:border-box}button{width:100%;padding:13px;background:#4B1D8F;color:white;border:none;border-radius:10px;font-weight:bold;margin-top:10px}.item{background:white;padding:10px;margin:10px 0;border-radius:10px}.item img{width:100%;border-radius:10px}.del{background:red}</style>
-</head>
-<body>
-<h2 style="text-align:center">Илова кардани мол</h2>
-<input id="nom" placeholder="Номи мол - масалан: Кроссовкаи занона">
-<input id="narx" placeholder="Нарх - масалан: 75" type="number">
-<input id="tavsif" placeholder="Тавсиф - масалан: Размери 36-40">
-<input id="rasm" placeholder="Линки расм аз imgbb">
-<button onclick="ilova()">Илова кардан</button>
-
-<h3>Молҳои сабтшуда:</h3>
-<div id="ruyxat"></div>
-
+<!DOCTYPE html><html lang="tg"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Админ - Бозори Бародарон</title><style>body{margin:0;font-family:sans-serif;background:#f5f5f5;padding:15px}h2{text-align:center;color:#7c3aed}input,select{width:94%;padding:12px;margin:6px 0;border-radius:10px;border:1px solid #ddd}button{padding:11px 15px;border-radius:10px;border:none;font-weight:bold;margin:3px}.box{background:#fff;padding:15px;border-radius:12px;margin-bottom:12px}.thumb{width:70px;height:70px;object-fit:cover;border-radius:8px;margin:3px;border:2px solid #7c3aed}.item{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;padding:8px 0}.del{background:#fee;color:#c00}.edit{background:#facc15}</style></head><body>
+<h2>⚙️ Админ - Бозори Бародарон</h2>
+<div class="box"><b>🔑 Калиди GitHub:</b><br><small>Фақат 1 бор гузор!</small><input id="gh_token" type="password" placeholder="ghp_..."><button onclick="saveToken()" style="background:#111;color:#fff;width:100%">Сахра кардани калид</button><p id="tokenStatus"></p></div>
+<div class="box"><b>➕ Моли нав / Тағйир</b><input id="aName" placeholder="Номи мол"><input id="aPrice" type="number" placeholder="Нархи нав: масалан 85"><input id="aOldPrice" type="number" placeholder="Нархи кӯҳна: масалан 120 (агар фоиз надорад - холӣ гузор)"><select id="aCat"><option value="mardona">Мардона</option><option value="zanona">Занона</option><option value="kudakona">Кудакона</option></select><p><b>📸 Расм (то 4-то):</b></p><input id="aFiles" type="file" accept="image/*" multiple onchange="previewImgs(this)"><div id="previewBox" style="display:flex;flex-wrap:wrap"></div><button onclick="addProduct()" style="background:#22c55e;color:#fff;width:100%">➕ Илова / Сахра кардан!</button><p id="saveStatus" style="text-align:center;font-weight:bold"></p></div>
+<div class="box"><b>📋 Молҳои ҳозира:</b><div id="adminList"></div></div>
+<div class="box"><a href="index.html" style="color:#7c3aed;font-weight:bold">⬅️ Ба сайт баргаштан</a></div>
 <script>
-function nishon(){
-  let data = JSON.parse(localStorage.getItem('mahsulotlar')) || [];
-  let j = document.getElementById('ruyxat');
-  j.innerHTML = "";
-  data.forEach((m,i)=>{
-    j.innerHTML += `<div class="item"><img src="${m.rasm}"><b>${m.nom} - ${m.narx} сом</b><p>${m.tavsif}</p><button class="del" onclick="neist(${i})">Нест кардан</button></div>`;
-  });
-}
-function ilova(){
-  let nom = document.getElementById('nom').value;
-  let narx = document.getElementById('narx').value;
-  let tavsif = document.getElementById('tavsif').value;
-  let rasm = document.getElementById('rasm').value;
-  if(!nom || !narx || !rasm){ alert("Ном, нарх ва линки расмро нависед!"); return; }
-  let data = JSON.parse(localStorage.getItem('mahsulotlar')) || [];
-  data.push({nom:nom, narx:narx, tavsif:tavsif, rasm:rasm});
-  localStorage.setItem('mahsulotlar', JSON.stringify(data));
-  document.getElementById('nom').value="";
-  document.getElementById('narx').value="";
-  document.getElementById('tavsif').value="";
-  document.getElementById('rasm').value="";
-  alert("Сабт шуд!");
-  nishon();
-}
-function neist(i){
-  let data = JSON.parse(localStorage.getItem('mahsulotlar')) || [];
-  data.splice(i,1);
-  localStorage.setItem('mahsulotlar', JSON.stringify(data));
-  nishon();
-}
-nishon();
-</script>
-</body>
-</html>
+let REPO="muhammadlatif579/bozori-barodaron";
+let ghToken=localStorage.getItem('gh_token')||'';
+let products=[]; let tempImgs=[];
+function updateTokenStatus(){document.getElementById("tokenStatus").innerHTML=ghToken?"✅ Калид ҳаст":"❌ Калид нест";}
+function saveToken(){ghToken=document.getElementById("gh_token").value.trim();localStorage.setItem("gh_token",ghToken);updateTokenStatus();alert("Сахра шуд!");}
+async function load(){let r=await fetch('https://raw.githubusercontent.com/'+REPO+'/main/products.json?t='+Date.now());products=await r.json();renderAdminList();}
+function renderAdminList(){document.getElementById("adminList").innerHTML=products.map((p,i)=>`<div class="item"><span>${p.name} - ${p.price} с. ${p.oldPrice?` <s>${p.oldPrice}</s>`:''}</span><span><button class="edit" onclick="editProduct(${i})">✏️ Тағйир</button><button class="del" onclick="delProduct(${i})">🗑️ Нест</button></span></div>`).join("");}
+function previewImgs(input){tempImgs=[];document.getElementById("previewBox").innerHTML="";let files=[...input.files].slice(0,4);files.forEach(f=>{let r=new FileReader();r.onload=e=>{let img=new Image();img.onload=()=>{let c=document.createElement("canvas");let max=650;let w=img.width,h=img.height;if(w>max){h=h*max/w;w=max;}c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);let s=c.toDataURL("image/jpeg",0.75);tempImgs.push(s);document.getElementById("previewBox").innerHTML+=`<img src="${s}" class="thumb">`;};img.src=e.target.result;};r.readAsDataURL(f);});}
+async function saveToGitHub(){if(!ghToken){alert("Аввал калидро гузор!");return false;}document.getElementById("saveStatus").innerText="⏳ Сахра шуда истодааст...";let res=await fetch(`https://api.github.com/repos/${REPO}/contents/products.json`,{headers:{'Authorization':'token '+ghToken}});let data=await res.json();let toSave=products.map(p=>({name:p.name,price:p.price,oldPrice:p.oldPrice||null,cat:p.cat,imgs:p.imgs,img:p.imgs[0]}));let content=btoa(unescape(encodeURIComponent(JSON.stringify(toSave,null,2))));let put=await fetch(`https://api.github.com/repos/${REPO}/contents/products.json`,{method:'PUT',headers:{'Authorization':'token '+ghToken,'Content-Type':'application/json'},body:JSON.stringify({message:'Моли нав',content:content,sha:data.sha})});if(put.ok){document.getElementById("saveStatus").innerText="✅ ШУД!";return true;}else{document.getElementById("saveStatus").innerText="❌ Хатогӣ!";return false;}}
+async function addProduct(){let name=document.getElementById("aName").value.trim();let price=document.getElementById("aPrice").value;let oldPrice=document.getElementById("aOldPrice").value;let cat=document.getElementById("aCat").value;if(!name||!price){alert("Ном ва нархро нависон!");return;}if(tempImgs.length==0){alert("Расмро интихоб кун!");return;}products.push({name:name,price:Number(price),oldPrice:oldPrice?Number(oldPrice):null,cat:cat,imgs:[...tempImgs]});renderAdminList();document.getElementById("aName").value="";document.getElementById("aPrice").value="";document.getElementById("aOldPrice").value="";document.getElementById("aFiles").value="";document.getElementById("previewBox").innerHTML="";tempImgs=[];await saveToGitHub();}
+function editProduct(i){let p=products[i];document.getElementById("aName").value=p.name;document.getElementById("aPrice").value=p.price;document.getElementById("aOldPrice").value=p.oldPrice||"";document.getElementById("aCat").value=p.cat;tempImgs=[...p.imgs];document.getElementById("previewBox").innerHTML=tempImgs.map(s=>`<img src="${s}" class="thumb">`).join("");products.splice(i,1);renderAdminList();window.scrollTo(0,0);alert("Боло - иваз кун - ва Илова-ро пахш кун!");}
+async function delProduct(i){if(!confirm("Нест кунам?"))return;products.splice(i,1);renderAdminList();await saveToGitHub();}
+document.getElementById("gh_token").value=ghToken;updateTokenStatus();load();
+</script></body></html>
