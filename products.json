@@ -1,15 +1,5 @@
 [
   {
-    "name": "Красовкаи мардона",
-    "price": 75,
-    "oldPrice": null,
-    "cat": "mardona",
-    "imgs": [
-      "IMG-20261031-WA0007.jpg"
-    ],
-    "img": "IMG-20261031-WA0007.jpg"
-  },
-  {
     "name": "Красовкаи занона",
     "price": 75,
     "oldPrice": null,
@@ -187,5 +177,15 @@
       "IMG-20261106-WA9532.jpg"
     ],
     "img": "IMG-20261025-WA0010.jpg"
+  },
+  {
+    "name": "Красовкаи мардона",
+    "price": 75,
+    "oldPrice": 100,
+    "cat": "mardona",
+    "imgs": [
+      "IMG-20261031-WA0007.jpg"
+    ],
+    "img": "IMG-20261031-WA0007.jpg"
   }
 ]
