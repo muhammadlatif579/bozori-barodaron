@@ -1,15 +1,5 @@
 [
   {
-    "name": "Красовкаи занона",
-    "price": 75,
-    "oldPrice": null,
-    "cat": "zanona",
-    "imgs": [
-      "IMG-20261104-WA0097.jpg"
-    ],
-    "img": "IMG-20261104-WA0097.jpg"
-  },
-  {
     "name": "Красовкаи кудакона",
     "price": 69,
     "oldPrice": null,
@@ -187,5 +177,15 @@
       "IMG-20261031-WA0007.jpg"
     ],
     "img": "IMG-20261031-WA0007.jpg"
+  },
+  {
+    "name": "Красовкаи занона",
+    "price": 75,
+    "oldPrice": 100,
+    "cat": "zanona",
+    "imgs": [
+      "IMG-20261104-WA0097.jpg"
+    ],
+    "img": "IMG-20261104-WA0097.jpg"
   }
 ]
