@@ -5,7 +5,7 @@
 <div class="cats" id="cats"></div>
 <div style="padding:0 10px;font-weight:bold"><span id="txtProducts">Молҳо</span> <span style="float:right" id="txtDelivery">Душанбе • Доставка</span></div>
 <div class="grid" id="list"></div>
-<div id="pagination" style="text-align:center;padding:20px"></div>
+<div id="pagination" style="text-align:center;padding:20px 20px 80px"></div>
 <button id="favBtn" onclick="showFav()"><span id="txtFav">❤️ Дӯстдоштаҳо</span> (<span id="favCnt">0</span>)</button>
 <button id="cartBtn" onclick="order()"><span id="txtCart">🛒 Сабад</span> (<span id="cnt">0</span>) <span id="txtOrder">- Заказ додан</span></button>
 <div id="modal"><img id="mImg"><div id="mName" style="font-weight:bold;margin:10px"></div><div><button onclick="prevImg()">◀️ <span id="txtPrev">Пеш</span></button><span id="mCount"></span><button onclick="nextImg()"><span id="txtNext">Баъд</span> ▶️</button></div><div style="display:flex;gap:8px;margin-top:10px"><button onclick="addFromModal()" style="background:#facc15" id="txtAddModal">Ба сабад</button><button onclick="closeModal()" style="background:#fff" id="txtClose">✕ Пӯшидан</button></div></div>
@@ -24,7 +24,7 @@ let defaultProducts=[{name:"Соати мардона",price:55,cat:"mardona",im
 let products=[...defaultProducts];
 let cats=[["hama","all"],["mardona","mardona"],["zanona","zanona"],["kudakona","kudakona"],["lavozimot","lavozimot"]];
 let cur="hama"; let cart=[]; let favs=[]; let curProd=null; let curIdx=0; let tempImgs=[]; let tempFiles=[];
-let currentPage=1; let perPage=20;
+let currentPage=1; let perPage=3000;
 function renderCats(){document.getElementById("cats").innerHTML=cats.map(c=>`<button class="${cur==c[0]?'on':''}" onclick="setCat('${c[0]}')">${T[LANG][c[1]]}</button>`).join("");}
 function setCat(c){cur=c;currentPage=1;renderCats();render();}
 function toggleFav(n,e){if(e)e.stopPropagation();if(favs.includes(n)){favs=favs.filter(x=>x!==n);}else{favs.push(n);}document.getElementById("favCnt").innerText=favs.length;render();}
