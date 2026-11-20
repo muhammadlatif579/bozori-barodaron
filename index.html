@@ -19,6 +19,25 @@
 <p><b>➕ Моли нав</b></p><input id="aName" placeholder="Номи мол: Гарданбанд | Ожерелье"><input id="aPrice" type="number" placeholder="Нархи нав"><input id="aOldPrice" type="number" placeholder="Нархи кӯҳна (агар ҳаст)"><select id="aCat"><option value="mardona">Мардона</option><option value="zanona">Занона</option><option value="kudakona">Кудакона</option><option value="lavozimot">Лавозимоти хона</option></select><p style="font-size:13px"><b>📸 Расм (то 4-то):</b></p><input id="aFiles" type="file" accept="image/*" multiple onchange="previewImgs(this)"><div id="previewBox" style="display:flex;flex-wrap:wrap"></div><button id="addBtn" onclick="addProduct()" style="background:#22c55e;color:#fff;width:100%">➕ Илова кардан!</button><p id="saveStatus" style="text-align:center;font-weight:bold;font-size:13px"></p><hr><p><b>📋 Молҳои ҳозира:</b></p><input id="adminSearch" placeholder="🔍 Номи молро нависон..." oninput="renderAdminList()" style="width:94%;padding:12px;border:2px solid #7c3aed;border-radius:10px;font-weight:bold"><div style="display:flex;gap:5px;flex-wrap:wrap;margin:8px 0"><button class="adminCatBtn on" id="ac_hama" onclick="setAdminCat('hama')">Ҳама</button><button class="adminCatBtn" id="ac_mardona" onclick="setAdminCat('mardona')">Мардона</button><button class="adminCatBtn" id="ac_zanona" onclick="setAdminCat('zanona')">Занона</button><button class="adminCatBtn" id="ac_kudakona" onclick="setAdminCat('kudakona')">Кудакона</button><button class="adminCatBtn" id="ac_lavozimot" onclick="setAdminCat('lavozimot')">Хона</button></div><div id="adminList"></div><hr><p><b>📤 Захира:</b></p><button onclick="showGitHubCode()" style="background:#000;color:#fff;width:100%">📋 Коди products.json-ро гирифтан</button><textarea id="copyBox" style="display:none" readonly></textarea></div>
 <div id="adminOrdersTab" style="display:none"><div style="display:flex;gap:5px"><button onclick="loadOrders()" style="background:#22c55e;color:#fff;flex:1">🔄 Нав кардан</button><button onclick="clearDoneOrders()" style="background:#eee;flex:1">Тоза кардани анҷомшуда</button></div><div id="ordersList" style="margin-top:10px"><p>Заказ нест...</p></div></div>
 <button onclick="closeAdmin()" style="background:#eee;width:100%;margin-top:10px">✕ Пӯшидан</button></div></div></div>
+
+<!-- FOOTER + PRIVACY POLICY - Бозори Бародарон -->
+<footer style="background:#7c3aed;color:#fff;text-align:center;padding:20px 15px 100px;font-size:14px;">
+  <b>Бозори Бародарон - 2026</b><br>
+  Доставка дар тамоми Тоҷикистон<br><br>
+  <a href="#privacy" style="color:#facc15;font-weight:bold;">Privacy Policy - Сиёсати махфият</a>
+</footer>
+<div id="privacy" style="padding:20px;background:#f5f5f5;color:#333;font-size:14px;line-height:1.6;">
+  <h3>Privacy Policy - Бозори Бародарон</h3>
+  <p>1. Мо фақат номи шумо, рақами телефон ва суроғаи шуморо барои расонидани заказ мегирем.</p>
+  <p>2. Мо маълумоти шуморо ба каси дигар намедиҳем, намефурӯшем.</p>
+  <p><b>3. Пул ва Бозпас:</b><br>
+  Шумо аввал пулро месупоред, баъд мо фармоишро мегирем ва молро меорем. Мо рақами картаи шуморо намегирем.<br>
+  <b>Агар мол ба шумо писанд нашуд - пул пурра бозпас фиристода мешавад!</b></p>
+  <p>4. Агар хоҳед, мо маълумоти шуморо нест мекунем.</p>
+  <p><b>Доставка дар тамоми Тоҷикистон:</b><br>
+  Душанбе, Кӯлоб, Хуҷанд, Бохтар, Ваҳдат, Турсунзода, Ҳисор, Данғара, Фархор, Панҷакент, Истаравшан, Конибодом, Исфара, Норак, Левакант ва ҳамаи шаҳру ноҳияҳо!</p>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script>
