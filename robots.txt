@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://bozori-barodaron.github.io/sitemap.xml
