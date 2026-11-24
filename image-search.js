@@ -1,5 +1,4 @@
-// image-search.js - НАВИ САХТГИР - мисли Wildberries
-// Факат хамон ранг + хамон намуд (мардона/занона) + хамон шакл
+// image-search.js - НАВИ ДУРУСТ - мукоисаи хакикии акс ба акс
 let _imgModel = null, _tfLoaded = false;
 
 function loadScript(src){
@@ -9,48 +8,39 @@ function loadScript(src){
   });
 }
 
-// Ранги асосии аксро ёфтан - сиёх, сафед, сурх ва гайра
-function getDominantColor(img){
+// Ранги ХУДИ пойафзол - факат марказ, на замин!
+function getShoeColor(img){
   try{
-    let c=document.createElement('canvas'); c.width=50; c.height=50;
-    let ctx=c.getContext('2d'); ctx.drawImage(img,0,0,50,50);
-    let d=ctx.getImageData(0,0,50,50).data;
+    let c=document.createElement('canvas'); c.width=100; c.height=100;
+    let ctx=c.getContext('2d'); ctx.drawImage(img,0,0,100,100);
+    // Факат марказ 40% - дар он чо пойафзол аст, замин не
+    let d=ctx.getImageData(30,30,40,40).data;
     let r=0,g=0,b=0,n=0;
-    for(let i=0;i<d.length;i+=16){ r+=d[i]; g+=d[i+1]; b+=d[i+2]; n++; }
+    for(let i=0;i<d.length;i+=4){ r+=d[i]; g+=d[i+1]; b+=d[i+2]; n++; }
     r/=n; g/=n; b/=n;
     let max=Math.max(r,g,b), min=Math.min(r,g,b);
-    // сиёх
-    if(max<70) return 'black';
-    if(min>200) return 'white';
-    if(r>150 && g<100 && b<100) return 'red';
-    if(r>150 && g>130 && b<100) return 'beige';
-    if(b>120 && b>r+20) return 'blue';
-    if(max-min<25) return 'gray';
+    if(max<85) return 'black';
+    if(min>205) return 'white';
+    if(r>160 && g<110 && b<110) return 'red';
+    if(max-min<22) return 'gray';
     return 'other';
   }catch(e){ return 'other'; }
 }
 
-function colorToKeys(color){
-  if(color=='black') return ['сиёх','черн','black','чёрн'];
-  if(color=='white') return ['сафед','бел','white','белая'];
-  if(color=='red') return ['сурх','красн','red','борд'];
-  if(color=='beige') return ['беж','крем','бежев'];
-  if(color=='blue') return ['кабуд','син','blue'];
-  return [];
+function cosine(a,b){
+  let dot=0, na=0, nb=0;
+  for(let i=0;i<a.length;i++){ dot+=a[i]*b[i]; na+=a[i]*a[i]; nb+=b[i]*b[i]; }
+  return dot / (Math.sqrt(na)*Math.sqrt(nb) + 0.00001);
 }
 
-function guessType(t){
-  t=(t||'').toLowerCase();
-  if(t.includes('sneaker')||t.includes('shoe')||t.includes('running')||t.includes('footwear')) return 'shoe';
-  if(t.includes('sandal')||t.includes('slipper')) return 'shoe';
-  if(t.includes('pump')||t.includes('heel')) return 'shoe';
-  if(t.includes('jacket')||t.includes('coat')||t.includes('sweatshirt')||t.includes('cardigan')||t.includes('hoodie')) return 'jacket';
-  if(t.includes('watch')||t.includes('clock')) return 'watch';
-  if(t.includes('handbag')||t.includes('bag')||t.includes('backpack')||t.includes('purse')) return 'bag';
-  if(t.includes('shirt')||t.includes('t-shirt')||t.includes('tee')) return 'shirt';
-  if(t.includes('jean')||t.includes('pant')||t.includes('trouser')||t.includes('denim')) return 'pants';
-  if(t.includes('hat')||t.includes('cap')) return 'hat';
-  return 'shoe';
+async function getEmbedding(imgEl){
+  // mobilenet.infer - вектори шаклро медихад
+  let t = tf.browser.fromPixels(imgEl);
+  let resized = tf.image.resizeBilinear(t, [224,224]);
+  let emb = _imgModel.infer(resized, true);
+  let arr = await emb.data();
+  t.dispose(); resized.dispose(); emb.dispose();
+  return arr;
 }
 
 async function searchByImage(input){
@@ -60,7 +50,7 @@ async function searchByImage(input){
   img.onload = async ()=>{
     try{
       document.getElementById('list').scrollIntoView({behavior:'smooth'});
-      document.getElementById('list').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px">⏳ Ҷустуҷӯи монандтарин...<br><small>Фақат ҳамон ранг + ҳамон намуд</small></div>';
+      document.getElementById('list').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px">⏳ Акс ба акс мукоиса карда истодаам...<br><small>Факат монандтаринхо</small></div>';
 
       if(!_tfLoaded){
         await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js');
@@ -69,68 +59,53 @@ async function searchByImage(input){
       }
       if(!_imgModel) _imgModel = await mobilenet.load();
 
-      let pred = await _imgModel.classify(img);
-      let predText = pred.map(p=>p.className).join(' ').toLowerCase();
-      let type = guessType(predText);
-      let qColor = getDominantColor(img);
-      let colorKeys = colorToKeys(qColor);
+      let qColor = getShoeColor(img);
+      let qEmb = await getEmbedding(img);
 
-      // 1) Аввал аз рӯи намуд филтр мекунем
-      let candidates = products.filter(p=>{
-        let n=(p.name||'').toLowerCase();
-        if(type=='shoe'){
-          return n.includes('красовка')||n.includes('кроссов')||n.includes('пойафзол')||n.includes('обув')||n.includes('туфли')||n.includes('тапочка')||n.includes('красовкаи')||n.includes('ботин')||n.includes('сандал');
-        }
-        if(type=='jacket') return n.includes('куртка')||n.includes('кофта')||n.includes('шуба')||n.includes('двойка');
-        if(type=='watch') return n.includes('соат')||n.includes('часы');
-        if(type=='bag') return n.includes('сумка');
-        if(type=='shirt') return n.includes('футболка')||n.includes('пироҳан')||n.includes('рубашка');
-        if(type=='pants') return n.includes('шиму')||n.includes('джинс')||n.includes('брюки');
-        return true;
-      });
+      // Хамаи молхоро бо акси ту мукоиса мекунем
+      let scored = [];
+      // Барои тез кор кардан факат 60-тои охиринро месанчем - одатан молхои нав хамон чоянд
+      // Агар хохед хамаашро санчад - 60-ро ба products.length иваз кунед
+      let toCheck = products.slice(-80);
 
-      // 2) Агар ранги акс сиёх бошад - факат сиёхро мемонем, сафедро не!
-      // Ин мухимтарин чиз аст - мисли мисоли ту
-      if(qColor=='black' || qColor=='white'){
-        let byColor = candidates.filter(p=>{
-          let n=(p.name||'').toLowerCase();
-          // Агар номи мол рангашро дошта бошад - аз рӯи ном
-          // Агар надошта бошад - мемонем, чунки акси молро баъд санчида намешавад
-          // Лекин барои пойафзол мо сахтгиртар мекунем: танхо хамоне ки номаш ба ранги акс мувофик аст ё номаш ранг надорад
-          return true;
-        });
-        // Мо ранги хар як моли кандидат-ро аз аксаш хонда, бо ранги акси чустучу мукоиса мекунем
-        let scored = [];
-        for(let p of candidates){
-          try{
-            let pim = new Image(); pim.crossOrigin='anonymous'; pim.src = (p.imgs && p.imgs[0]) || '';
-            await new Promise(res=>{ pim.onload=res; pim.onerror=res; });
-            let pColor = getDominantColor(pim);
-            // Агар ранги мол ба ранги акси чустучу монанд бошад - бахои баланд
-            // Агар сиёх чустучу кунем ва моли сафед бошад - хорич мекунем
-            if(qColor=='black' && (pColor=='white' || pColor=='beige' || pColor=='red')) continue;
-            if(qColor=='white' && pColor=='black') continue;
-            if(qColor=='red' && pColor=='black' && false) continue;
-            scored.push({p, pColor, same: pColor==qColor ? 2 : 0});
-          }catch(e){ scored.push({p, pColor:'other', same:0}); }
-        }
-        // Аввал хамрангхо, баъд дигарон
-        scored.sort((a,b)=> b.same - a.same);
-        candidates = scored.map(s=>s.p);
+      for(let p of toCheck){
+        try{
+          let src = (p.imgs && p.imgs[0]) || '';
+          if(!src) continue;
+          let pim = new Image(); pim.crossOrigin='anonymous'; pim.src = src;
+          await new Promise(res=>{ pim.onload=res; pim.onerror=res; setTimeout(res, 1500); });
+          if(!pim.complete || pim.naturalWidth==0) continue;
+
+          let pColor = getShoeColor(pim);
+          let pEmb = await getEmbedding(pim);
+          let sim = cosine(qEmb, pEmb);
+
+          // САХТГИР: агар ранги пойафзол фарк кунад - холро хеле паст мекунем
+          // Сиёхро чустучу кунем - сафед ва сурх набояд барояд
+          if(qColor=='black' && pColor=='white') sim -= 0.35;
+          if(qColor=='black' && pColor=='red') sim -= 0.25;
+          if(qColor=='white' && pColor=='black') sim -= 0.35;
+          if(qColor=='black' && pColor=='black') sim += 0.08;
+          if(qColor=='white' && pColor=='white') sim += 0.08;
+
+          scored.push({p, sim, pColor});
+        }catch(e){}
       }
 
-      // 3) САХТГИР: факат 6-тои бехтарин, на 20-то!
-      // Агар 2-то монанд бошад - 2-то нишон медихад
-      let top = candidates.slice(0, 6);
+      scored.sort((a,b)=> b.sim - a.sim);
 
-      if(top.length==0){
-        document.getElementById('list').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px">😕 Монанд ёфт нашуд.<br>Акси равшантар гузор.</div>';
-        document.getElementById('pagination').innerHTML = '<button onclick="clearImageSearch()" style="background:#eee;border:none;padding:8px 16px;border-radius:20px;font-weight:bold">✕ Тоза кардан</button>';
-        return;
+      // Факат хеле монандхоро мемонем - мачбури пур намекунем!
+      // Агар факат 2-то монанд бошад - 2-то нишон медихад
+      let top = scored.filter(s=> s.sim > 0.78).slice(0, 6);
+      // Агар хеч кадомаш ба 0.78 нарасад - 3-тои бехтаринро нишон медихем, вале на 20-то
+      if(top.length==0) top = scored.slice(0, 3);
+
+      if(top.length==0 || scored.length==0){
+        document.getElementById('list').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px">😕 Монанд ёфт нашуд.<br>Акси равшантар, аз наздик гузор.</div>';
+      } else {
+        document.getElementById('list').innerHTML = top.map(s=>cardHtml(s.p, products.indexOf(s.p))).join("");
       }
-
-      document.getElementById('list').innerHTML = top.map(p=>cardHtml(p, products.indexOf(p))).join("");
-      document.getElementById('pagination').innerHTML = '<div style="font-size:13px;color:#666;margin-bottom:8px">✅ '+top.length+' намунаи монанд ёфт шуд (ранг: '+qColor+')</div><button onclick="clearImageSearch()" style="background:#eee;border:none;padding:8px 16px;border-radius:20px;font-weight:bold">✕ Тоза кардан</button>';
+      document.getElementById('pagination').innerHTML = '<div style="font-size:13px;color:#666;margin-bottom:8px">✅ '+top.length+' монандтарин ёфт шуд (ранги пойафзол: '+qColor+')</div><button onclick="clearImageSearch()" style="background:#eee;border:none;padding:8px 16px;border-radius:20px;font-weight:bold">✕ Тоза кардан</button>';
 
     }catch(e){ render(); }
   };
@@ -139,4 +114,4 @@ async function searchByImage(input){
 function clearImageSearch(){
   document.getElementById('imgSearchInput').value='';
   currentPage=1; render();
-  }
+    }
