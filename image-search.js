@@ -1,5 +1,6 @@
-// image-search.js - НАВИ ДУРУСТ - мукоисаи хакикии акс ба акс
+// image-search.js - ҲАМАИ молҳоро месанҷад, вале тезтар
 let _imgModel = null, _tfLoaded = false;
+let _embCache = {};
 
 function loadScript(src){
   return new Promise((res, rej)=>{
@@ -8,12 +9,28 @@ function loadScript(src){
   });
 }
 
-// Ранги ХУДИ пойафзол - факат марказ, на замин!
+function showYoutubeLoading(){
+  let skeletons = '';
+  for(let i=0;i<6;i++){
+    skeletons += `<div style="background:#fff;border-radius:12px;padding:10px;overflow:hidden">
+      <div style="width:100%;height:180px;background:#e5e5e5;border-radius:8px;animation:ytPulse 1.1s infinite"></div>
+      <div style="height:14px;background:#eee;border-radius:6px;margin-top:10px;animation:ytPulse 1.1s infinite"></div>
+      <div style="height:14px;background:#eee;border-radius:6px;margin-top:8px;width:60%;animation:ytPulse 1.1s infinite"></div>
+    </div>`;
+  }
+  document.getElementById('list').innerHTML = skeletons;
+  document.getElementById('pagination').innerHTML = '';
+  if(!document.getElementById('ytPulseStyle')){
+    let st=document.createElement('style'); st.id='ytPulseStyle';
+    st.innerHTML='@keyframes ytPulse{0%{opacity:1}50%{opacity:.45}100%{opacity:1}}';
+    document.head.appendChild(st);
+  }
+}
+
 function getShoeColor(img){
   try{
     let c=document.createElement('canvas'); c.width=100; c.height=100;
     let ctx=c.getContext('2d'); ctx.drawImage(img,0,0,100,100);
-    // Факат марказ 40% - дар он чо пойафзол аст, замин не
     let d=ctx.getImageData(30,30,40,40).data;
     let r=0,g=0,b=0,n=0;
     for(let i=0;i<d.length;i+=4){ r+=d[i]; g+=d[i+1]; b+=d[i+2]; n++; }
@@ -34,9 +51,8 @@ function cosine(a,b){
 }
 
 async function getEmbedding(imgEl){
-  // mobilenet.infer - вектори шаклро медихад
   let t = tf.browser.fromPixels(imgEl);
-  let resized = tf.image.resizeBilinear(t, [224,224]);
+  let resized = tf.image.resizeBilinear(t, [160,160]);
   let emb = _imgModel.infer(resized, true);
   let arr = await emb.data();
   t.dispose(); resized.dispose(); emb.dispose();
@@ -50,7 +66,7 @@ async function searchByImage(input){
   img.onload = async ()=>{
     try{
       document.getElementById('list').scrollIntoView({behavior:'smooth'});
-      document.getElementById('list').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px">⏳ Акс ба акс мукоиса карда истодаам...<br><small>Факат монандтаринхо</small></div>';
+      showYoutubeLoading();
 
       if(!_tfLoaded){
         await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js');
@@ -62,42 +78,43 @@ async function searchByImage(input){
       let qColor = getShoeColor(img);
       let qEmb = await getEmbedding(img);
 
-      // Хамаи молхоро бо акси ту мукоиса мекунем
       let scored = [];
-      // Барои тез кор кардан факат 60-тои охиринро месанчем - одатан молхои нав хамон чоянд
-      // Агар хохед хамаашро санчад - 60-ро ба products.length иваз кунед
-      let toCheck = products.slice(-80);
+      // ИСЛОҲ: ҲАМАИ молҳоро месанҷем - на 30-то!
+      // Агар моли ту 2-то намуна дошта бошад хам, хатман ёфт мешавад
+      let toCheck = products;
 
       for(let p of toCheck){
         try{
           let src = (p.imgs && p.imgs[0]) || '';
           if(!src) continue;
+          if(_embCache[src]){
+            let cached = _embCache[src];
+            let sim = cosine(qEmb, cached.emb);
+            if(qColor=='black' && cached.color=='white') sim -= 0.35;
+            if(qColor=='white' && cached.color=='black') sim -= 0.35;
+            if(qColor==cached.color) sim += 0.08;
+            scored.push({p, sim});
+            continue;
+          }
           let pim = new Image(); pim.crossOrigin='anonymous'; pim.src = src;
-          await new Promise(res=>{ pim.onload=res; pim.onerror=res; setTimeout(res, 1500); });
+          await new Promise(res=>{ pim.onload=res; pim.onerror=res; setTimeout(res, 800); });
           if(!pim.complete || pim.naturalWidth==0) continue;
-
           let pColor = getShoeColor(pim);
           let pEmb = await getEmbedding(pim);
+          _embCache[src] = {emb: pEmb, color: pColor};
           let sim = cosine(qEmb, pEmb);
-
-          // САХТГИР: агар ранги пойафзол фарк кунад - холро хеле паст мекунем
-          // Сиёхро чустучу кунем - сафед ва сурх набояд барояд
           if(qColor=='black' && pColor=='white') sim -= 0.35;
           if(qColor=='black' && pColor=='red') sim -= 0.25;
           if(qColor=='white' && pColor=='black') sim -= 0.35;
           if(qColor=='black' && pColor=='black') sim += 0.08;
           if(qColor=='white' && pColor=='white') sim += 0.08;
-
-          scored.push({p, sim, pColor});
+          scored.push({p, sim});
         }catch(e){}
       }
 
       scored.sort((a,b)=> b.sim - a.sim);
-
-      // Факат хеле монандхоро мемонем - мачбури пур намекунем!
-      // Агар факат 2-то монанд бошад - 2-то нишон медихад
+      // Меёбад: факат 6-тои монандтаринро нишон медихад - на 30-то!
       let top = scored.filter(s=> s.sim > 0.78).slice(0, 6);
-      // Агар хеч кадомаш ба 0.78 нарасад - 3-тои бехтаринро нишон медихем, вале на 20-то
       if(top.length==0) top = scored.slice(0, 3);
 
       if(top.length==0 || scored.length==0){
@@ -105,7 +122,7 @@ async function searchByImage(input){
       } else {
         document.getElementById('list').innerHTML = top.map(s=>cardHtml(s.p, products.indexOf(s.p))).join("");
       }
-      document.getElementById('pagination').innerHTML = '<div style="font-size:13px;color:#666;margin-bottom:8px">✅ '+top.length+' монандтарин ёфт шуд (ранги пойафзол: '+qColor+')</div><button onclick="clearImageSearch()" style="background:#eee;border:none;padding:8px 16px;border-radius:20px;font-weight:bold">✕ Тоза кардан</button>';
+      document.getElementById('pagination').innerHTML = '<div style="font-size:13px;color:#666;margin-bottom:8px">✅ '+top.length+' монандтарин ёфт шуд</div><button onclick="clearImageSearch()" style="background:#eee;border:none;padding:8px 16px;border-radius:20px;font-weight:bold">✕ Тоза кардан</button>';
 
     }catch(e){ render(); }
   };
@@ -114,4 +131,4 @@ async function searchByImage(input){
 function clearImageSearch(){
   document.getElementById('imgSearchInput').value='';
   currentPage=1; render();
-    }
+}
