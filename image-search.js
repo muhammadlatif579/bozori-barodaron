@@ -1,5 +1,7 @@
-// image-search.js - АЛОҲИДА - мисли Wildberries - фақат айнан монанд
+// image-search.js - АЛОҲИДА - АЙНАН + ТЕЗ - ҳамаи аксҳо, вале аз пеш ҳисобшуда
 let _imgModel = null, _tfLoaded = false, _modelPromise = null;
+let _embCache = new Map(); // src -> embedding, то 2-юм бор аз нав ҳисоб накунад
+let _preloading = false;
 
 function loadScript(src){
   return new Promise((res, rej)=>{
@@ -64,10 +66,45 @@ async function getEmbedding(imgEl){
   t.dispose(); resized.dispose(); emb.dispose();
   return arr;
 }
+function loadImg(src){
+  return new Promise(res=>{
+    let im=new Image(); im.crossOrigin='anonymous'; im.src=src;
+    im.onload=()=>res(im); im.onerror=()=>res(null); setTimeout(()=>res(null),800);
+  });
+}
+// === МУҲИМ: Молҳоро аз пеш, дар паси парда ҳисоб мекунем ===
+async function preloadAllEmbeddings(){
+  if(_preloading) return;
+  if(typeof products==='undefined' || products.length<5) return;
+  _preloading=true;
+  try{
+    await preloadModel();
+    // Ҳамаи аксҳои ҳамаи молҳо - бо навбат, то телефон ях накунад
+    for(let p of products){
+      let imgs=p.imgs||[];
+      for(let src of imgs.slice(0,4)){
+        if(_embCache.has(src)) continue;
+        let im=await loadImg(src);
+        if(!im) continue;
+        try{
+          let emb=await getEmbedding(im);
+          _embCache.set(src, {emb, color:getShoeColor(im)});
+        }catch(e){}
+        await new Promise(r=>setTimeout(r,10)); // нафас барои телефон
+      }
+    }
+    console.log('✅ Ҳамаи аксҳо тайёр:', _embCache.size);
+  }catch(e){ console.log(e); }
+  _preloading=false;
+}
+// Ҳар 3 сония санҷ: агар молҳо омаданд ва ҳанӯз ҳисоб нашудаанд - сар кун
+setInterval(()=>{
+  if(typeof products!=='undefined' && products.length>=5 && _embCache.size===0) preloadAllEmbeddings();
+}, 3000);
 
 async function searchByImage(input){
   if(!input.files || !input.files[0]) return;
-  if(!window.products || products.length < 5){
+  if(typeof products === 'undefined' || products.length < 5){
     alert('⏳ Молҳо ҳоло бор шуда истодаанд, 5 сония сабр кун!');
     input.value=''; return;
   }
@@ -82,22 +119,26 @@ async function searchByImage(input){
       let qEmb=await getEmbedding(img);
 
       async function checkOne(p){
-        // ҲАМАИ аксҳои молро месанҷем, на фақат 1-умро - то айнан ёфт шавад
         let imgs=p.imgs||[];
-        let bestSim=-1; let bestColor='other';
+        let bestSim=-1;
+        // ҲАМАИ 4 АКСРО МЕСАНҶЕМ - новобаста аз он ки мол дар кадом акс аст
         for(let src of imgs.slice(0,4)){
-          let pim=new Image(); pim.crossOrigin='anonymous'; pim.src=src;
-          await new Promise(res=>{ pim.onload=res; pim.onerror=res; setTimeout(res,400); });
-          if(!pim.complete || pim.naturalWidth==0) continue;
-          let pColor=getShoeColor(pim);
-          let pEmb=await getEmbedding(pim);
+          let cached=_embCache.get(src);
+          let pEmb, pColor;
+          if(cached){ pEmb=cached.emb; pColor=cached.color; }
+          else{
+            let pim=await loadImg(src);
+            if(!pim) continue;
+            pColor=getShoeColor(pim);
+            pEmb=await getEmbedding(pim);
+            _embCache.set(src, {emb:pEmb, color:pColor});
+          }
           let sim=cosine(qEmb,pEmb);
-          // Ҷаримаи сахт барои ранги номувофиқ - туфлии сиёҳ дигар красовкаи сафед намебарояд
           if(qColor=='black' && pColor=='white') sim-=0.45;
           if(qColor=='white' && pColor=='black') sim-=0.45;
           if(qColor=='black' && pColor=='red') sim-=0.30;
           if(qColor==pColor) sim+=0.10;
-          if(sim>bestSim){ bestSim=sim; bestColor=pColor; }
+          if(sim>bestSim) bestSim=sim;
         }
         if(bestSim==-1) return null;
         return {p, sim:bestSim};
@@ -111,8 +152,7 @@ async function searchByImage(input){
       scored.sort((a,b)=> b.sim - a.sim);
       console.log('TOP:', scored.slice(0,3).map(s=>s.p.name+'='+s.sim.toFixed(2)));
 
-      // МИСЛИ WILDBERRIES: фақат агар хеле монанд бошад - 0.85
-      // Агар 1-то бошад хам, хамон 1-то нишон дода мешавад. Агар набошад - хеч чиз.
+      // Мисли Wildberries: фақат айнан монанд - 0.85
       let top=scored.filter(s=> s.sim > 0.85);
 
       if(top.length==0){
