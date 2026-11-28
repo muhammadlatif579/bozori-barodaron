@@ -12,23 +12,23 @@ window.start = async function(){
   let list = await r.json();
   document.getElementById('s').innerText = '✅ '+list.length+' мол ёфт шуд! Модел бор мешавад...';
   let ex = await pipeline('image-feature-extraction','Xenova/clip-vit-base-patch32');
+  // ИСЛОҲИ КАЛОН: Куҳнаро умуман намегирем! Ҳамааш аз нав!
+  // Пештар: агар куҳна буд - нав намесохт, барои ҳамин 300x300 мемонд!
   let out = {};
-  try{
-    let ro = await fetch('https://raw.githubusercontent.com/muhammadlatif579/bozori-barodaron/main/embeddings.json?t='+Date.now());
-    if(ro.ok) out = await ro.json();
-  }catch(e){}
   let cnt = 0;
   for(let i=0;i<list.length;i++){
     let p = list[i];
     document.getElementById('s').innerText = '⏳ '+(i+1)+' / '+list.length+' - '+p.name;
-    if(out[p.id] || out[p.imgCode]){ cnt++; continue; }
+    // ИСЛОҲ: Дигар skip намекунем! Ҳар як молро аз нав мехонем!
     try{
-      let o = await ex(p.imgs[0]);
+      let imgUrl = (p.imgs && p.imgs[0]) ? p.imgs[0] : p.img;
+      if(!imgUrl) continue;
+      let o = await ex(imgUrl);
       let emb = Array.from(o.data);
       out[p.id] = emb;
       if(p.imgCode) out[p.imgCode] = emb;
       cnt++;
-    }catch(e){}
+    }catch(e){ console.log('Хатогӣ:', p.name, e); }
   }
   let blob = new Blob([JSON.stringify(out)], {type:'application/json'});
   let a = document.createElement('a');
