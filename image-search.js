@@ -1,7 +1,6 @@
-// image-search.js - АЛОҲИДА - АЙНАН + ТЕЗ - ҳамаи аксҳо, вале аз пеш ҳисобшуда
+// image-search.js - ФИКС - фақат монандҳоро нишон медиҳад, на 6-тои маҷбурӣ
 let _imgModel = null, _tfLoaded = false, _modelPromise = null;
-let _embCache = new Map(); // src -> embedding, то 2-юм бор аз нав ҳисоб накунад
-let _preloading = false;
+let _embCache = new Map();
 
 function loadScript(src){
   return new Promise((res, rej)=>{
@@ -60,7 +59,7 @@ setTimeout(preloadModel, 1000);
 
 async function getEmbedding(imgEl){
   let t=tf.browser.fromPixels(imgEl);
-  let resized=tf.image.resizeBilinear(t,[224,224]);
+  let resized=tf.image.resizeBilinear(t,[160,160]);
   let emb=_imgModel.infer(resized,true);
   let arr=Array.from(await emb.data());
   t.dispose(); resized.dispose(); emb.dispose();
@@ -72,35 +71,6 @@ function loadImg(src){
     im.onload=()=>res(im); im.onerror=()=>res(null); setTimeout(()=>res(null),800);
   });
 }
-// === МУҲИМ: Молҳоро аз пеш, дар паси парда ҳисоб мекунем ===
-async function preloadAllEmbeddings(){
-  if(_preloading) return;
-  if(typeof products==='undefined' || products.length<5) return;
-  _preloading=true;
-  try{
-    await preloadModel();
-    // Ҳамаи аксҳои ҳамаи молҳо - бо навбат, то телефон ях накунад
-    for(let p of products){
-      let imgs=p.imgs||[];
-      for(let src of imgs.slice(0,4)){
-        if(_embCache.has(src)) continue;
-        let im=await loadImg(src);
-        if(!im) continue;
-        try{
-          let emb=await getEmbedding(im);
-          _embCache.set(src, {emb, color:getShoeColor(im)});
-        }catch(e){}
-        await new Promise(r=>setTimeout(r,10)); // нафас барои телефон
-      }
-    }
-    console.log('✅ Ҳамаи аксҳо тайёр:', _embCache.size);
-  }catch(e){ console.log(e); }
-  _preloading=false;
-}
-// Ҳар 3 сония санҷ: агар молҳо омаданд ва ҳанӯз ҳисоб нашудаанд - сар кун
-setInterval(()=>{
-  if(typeof products!=='undefined' && products.length>=5 && _embCache.size===0) preloadAllEmbeddings();
-}, 3000);
 
 async function searchByImage(input){
   if(!input.files || !input.files[0]) return;
@@ -121,7 +91,6 @@ async function searchByImage(input){
       async function checkOne(p){
         let imgs=p.imgs||[];
         let bestSim=-1;
-        // ҲАМАИ 4 АКСРО МЕСАНҶЕМ - новобаста аз он ки мол дар кадом акс аст
         for(let src of imgs.slice(0,4)){
           let cached=_embCache.get(src);
           let pEmb, pColor;
@@ -134,10 +103,9 @@ async function searchByImage(input){
             _embCache.set(src, {emb:pEmb, color:pColor});
           }
           let sim=cosine(qEmb,pEmb);
-          if(qColor=='black' && pColor=='white') sim-=0.45;
-          if(qColor=='white' && pColor=='black') sim-=0.45;
-          if(qColor=='black' && pColor=='red') sim-=0.30;
-          if(qColor==pColor) sim+=0.10;
+          if(qColor=='black' && pColor=='white') sim-=0.15;
+          if(qColor=='white' && pColor=='black') sim-=0.15;
+          if(qColor==pColor) sim+=0.05;
           if(sim>bestSim) bestSim=sim;
         }
         if(bestSim==-1) return null;
@@ -145,22 +113,22 @@ async function searchByImage(input){
       }
 
       let scored=[];
-      for(let i=0;i<products.length;i+=4){
-        let results=await Promise.all(products.slice(i,i+4).map(checkOne));
+      for(let i=0;i<products.length;i+=8){
+        let results=await Promise.all(products.slice(i,i+8).map(checkOne));
         scored.push(...results.filter(Boolean));
       }
       scored.sort((a,b)=> b.sim - a.sim);
-      console.log('TOP:', scored.slice(0,3).map(s=>s.p.name+'='+s.sim.toFixed(2)));
+      console.log('TOP:', scored.slice(0,6).map(s=>s.p.name+'='+s.sim.toFixed(2)));
 
-      // Мисли Wildberries: фақат айнан монанд - 0.85
-      let top=scored.filter(s=> s.sim > 0.85);
+      // ДУРУСТАШ: Фақат монандҳо - 0.72 боло. Агар 1-то бошад 1-то, агар 2-то бошад 2-то.
+      let top=scored.filter(s=> s.sim > 0.72).slice(0,6);
 
       if(top.length==0){
-        document.getElementById('list').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:30px">😕 Моли айнан монанд ёфт нашуд.<br>Акси равшантар, аз наздик ва аз пеш гузор.<br><br><button onclick="clearImageSearch()" style="background:#7c3aed;color:#fff;border:none;padding:10px 20px;border-radius:20px;font-weight:bold">Ҳамаи молҳоро бубин</button></div>';
+        document.getElementById('list').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:30px">😕 Моли монанд ёфт нашуд.<br>Акси равшантар гузор.<br><br><button onclick="clearImageSearch()" style="background:#7c3aed;color:#fff;border:none;padding:10px 20px;border-radius:20px;font-weight:bold">Ҳамаи молҳоро бубин</button></div>';
         document.getElementById('pagination').innerHTML='';
       } else {
-        document.getElementById('list').innerHTML=top.slice(0,6).map(s=>cardHtml(s.p, products.indexOf(s.p))).join("");
-        document.getElementById('pagination').innerHTML='<div style="font-size:13px;color:#666">✅ '+top.length+' моли айнан монанд ёфт шуд</div><button onclick="clearImageSearch()" style="background:#eee;border:none;padding:8px 16px;border-radius:20px;font-weight:bold">✕ Тоза кардан</button>';
+        document.getElementById('list').innerHTML=top.map(s=>cardHtml(s.p, products.indexOf(s.p))).join("");
+        document.getElementById('pagination').innerHTML='<div style="font-size:13px;color:#666">✅ '+top.length+' моли монанд ёфт шуд</div><button onclick="clearImageSearch()" style="background:#eee;border:none;padding:8px 16px;border-radius:20px;font-weight:bold">✕ Тоза кардан</button>';
       }
     }catch(e){ console.log(e); render(); }
   };
@@ -168,4 +136,4 @@ async function searchByImage(input){
 function clearImageSearch(){
   document.getElementById('imgSearchInput').value='';
   currentPage=1; render();
-}
+  }
