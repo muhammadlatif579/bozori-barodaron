@@ -4,34 +4,16 @@
 <p id="status">Бор мешавад...</p>
 <button onclick="start()" style="background:#7c3aed;color:#fff;border:none;padding:12px 25px;border-radius:20px;font-weight:bold;font-size:16px">▶️ Сар кардан</button>
 <br><br><a id="dl" style="display:none;background:green;color:#fff;padding:12px 25px;border-radius:20px;text-decoration:none;font-weight:bold">⬇️ embeddings.json-ро гирифтан</a>
-<pre id="debug" style="text-align:left;font-size:11px;background:#f5f5f5;padding:10px;overflow:auto"></pre>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
 <script>
 let products=[];
 async function loadProducts(){
   try{
-    // ДУРУСТ: Молҳо дар products_1.json ҳастанд
     let r=await fetch('products_1.json');
-    let raw=await r.json();
-    document.getElementById('debug').innerText='Аввалин мол: '+JSON.stringify(raw[0]).slice(0,500);
-    // Молҳоро мисли худи index-и ту табдил медиҳем
-    products=raw.map(p=>{
-      let imgs=p.imgs || p.images || [];
-      // Агар мол imgs надошта бошад, вале imgCode дошта бошад
-      if(imgs.length==0 && p.imgCode){
-        // Агар дар index-и ту аксҳо бо imgCode сохта мешаванд, ҳаминро истифода баред
-        // Мисол: images/IMG_xxx.jpg - агар дигар хел бошад, ба ман бигӯ
-        imgs=[p.imgCode];
-      }
-      // Агар дар мол photos бошад
-      if(imgs.length==0 && p.photos) imgs=p.photos;
-      return {name:p.name||p.title||'Мол', imgs:imgs, orig:p};
-    });
+    products=await r.json();
     document.getElementById('status').innerText='✅ '+products.length+' мол ёфт шуд. Тугмаи «Сар кардан»-ро пахш кун.';
-  }catch(e){
-    document.getElementById('status').innerText='Хатогӣ: '+e.message;
-  }
+  }catch(e){ document.getElementById('status').innerText='Хатогӣ: '+e.message; }
 }
 function cropCenter(imgEl){
   let c=document.createElement('canvas'); let w=imgEl.naturalWidth||imgEl.width,h=imgEl.naturalHeight||imgEl.height;
@@ -53,23 +35,17 @@ async function start(){
     document.getElementById('status').innerText='Ҳисоб: '+(pi+1)+'/'+products.length+' - '+p.name;
     for(let src of (p.imgs||[]).slice(0,4)){
       try{
-        let fullSrc=src;
-        // Агар src фақат код бошад (масалан IMG_...), ба URL табдил кун
-        if(!fullSrc.startsWith('http') && !fullSrc.includes('/') && !fullSrc.includes('.')){
-          // Ин ҷо бояд мисли index-и ту шавад - ҳозир images/ мегузорем
-          fullSrc='images/'+fullSrc+'.jpg';
-        }
-        let im=new Image(); im.crossOrigin='anonymous'; im.src=fullSrc;
-        await new Promise(res=>{im.onload=res; im.onerror=res; setTimeout(res,1000);});
-        if(!im.complete||im.naturalWidth==0){ console.log('Нашуд:',fullSrc); continue; }
+        let im=new Image(); im.crossOrigin='anonymous'; im.src=src;
+        await new Promise(res=>{im.onload=res; im.onerror=res; setTimeout(res,1500);});
+        if(!im.complete||im.naturalWidth==0) continue;
         let cropped=cropCenter(im);
         let t=tf.browser.fromPixels(cropped); let resized=tf.image.resizeBilinear(t,[224,224]);
         let emb=model.infer(resized,true); let arr=Array.from(await emb.data());
         t.dispose(); resized.dispose(); emb.dispose();
         out[src]={e:arr.map(x=>Math.round(x*1000)/1000), h:getColorHist(cropped).map(x=>Math.round(x*1000)/1000)};
-      }catch(e){ console.log(e); }
+      }catch(e){}
     }
-    await new Promise(r=>setTimeout(r,20));
+    await new Promise(r=>setTimeout(r,10));
   }
   let blob=new Blob([JSON.stringify(out)],{type:'application/json'});
   let a=document.getElementById('dl'); a.href=URL.createObjectURL(blob); a.download='embeddings.json'; a.style.display='inline-block';
