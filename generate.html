@@ -13,7 +13,6 @@ window.start = async function(){
   document.getElementById('s').innerText = '✅ '+list.length+' мол ёфт шуд! Модел бор мешавад...';
   let ex = await pipeline('image-feature-extraction','Xenova/clip-vit-base-patch32');
   let out = {};
-  // Аввал embeddings-и куҳнаро ҳам мегирем, то гум нашавад!
   try{
     let ro = await fetch('https://raw.githubusercontent.com/muhammadlatif579/bozori-barodaron/main/embeddings.json?t='+Date.now());
     if(ro.ok) out = await ro.json();
@@ -22,7 +21,6 @@ window.start = async function(){
   for(let i=0;i<list.length;i++){
     let p = list[i];
     document.getElementById('s').innerText = '⏳ '+(i+1)+' / '+list.length+' - '+p.name;
-    // Агар ин мол аллакай ҳаст - мегузарем, вақтро сарфа мекунем!
     if(out[p.id] || out[p.imgCode]){ cnt++; continue; }
     try{
       let o = await ex(p.imgs[0]);
