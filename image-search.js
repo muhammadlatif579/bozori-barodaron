@@ -1,4 +1,4 @@
-// image-search.js - ФИКС - фақат монандҳоро нишон медиҳад, на 6-тои маҷбурӣ
+// image-search.js - ДУРУСТ - Бигзор 30 сония шавад, аммо айнан худашро ёбад
 let _imgModel = null, _tfLoaded = false, _modelPromise = null;
 let _embCache = new Map();
 
@@ -21,22 +21,6 @@ function showYoutubeLoading(){
     document.head.appendChild(st);
   }
 }
-function getShoeColor(img){
-  try{
-    let c=document.createElement('canvas'); c.width=100; c.height=100;
-    let ctx=c.getContext('2d'); ctx.drawImage(img,0,0,100,100);
-    let d=ctx.getImageData(30,30,40,40).data;
-    let r=0,g=0,b=0,n=0;
-    for(let i=0;i<d.length;i+=4){ r+=d[i]; g+=d[i+1]; b+=d[i+2]; n++; }
-    r/=n; g/=n; b/=n;
-    let max=Math.max(r,g,b), min=Math.min(r,g,b);
-    if(max<85) return 'black';
-    if(min>205) return 'white';
-    if(r>160 && g<110 && b<110) return 'red';
-    if(max-min<22) return 'gray';
-    return 'other';
-  }catch(e){ return 'other'; }
-}
 function cosine(a,b){
   let dot=0, na=0, nb=0;
   for(let i=0;i<a.length;i++){ dot+=a[i]*b[i]; na+=a[i]*a[i]; nb+=b[i]*b[i]; }
@@ -57,13 +41,51 @@ function preloadModel(){
 }
 setTimeout(preloadModel, 1000);
 
-async function getEmbedding(imgEl){
-  let t=tf.browser.fromPixels(imgEl);
-  let resized=tf.image.resizeBilinear(t,[160,160]);
+// === НАВ: Акси канораҳоро мебурем, фақат худи молро мегирем ===
+function cropCenter(imgEl){
+  let c=document.createElement('canvas');
+  // 20% аз ҳар тараф мебурем - пол ва девор нест мешавад, фақат пойафзол мемонад
+  let w=imgEl.naturalWidth||imgEl.width, h=imgEl.naturalHeight||imgEl.height;
+  let cw=w*0.6, ch=h*0.6, cx=w*0.2, cy=h*0.2;
+  c.width=160; c.height=160;
+  let ctx=c.getContext('2d');
+  ctx.drawImage(imgEl, cx, cy, cw, ch, 0, 0, 160, 160);
+  return c;
+}
+// === НАВ: Ранги дақиқ - мокасини сиёҳи тобнок ва красовкаи сиёҳи матнӣ фарқ доранд ===
+function getColorHist(canvasEl){
+  let ctx=canvasEl.getContext('2d');
+  let d=ctx.getImageData(0,0,160,160).data;
+  let hist=new Array(12).fill(0);
+  for(let i=0;i<d.length;i+=16){
+    let r=d[i], g=d[i+1], b=d[i+2];
+    let idx=0;
+    if(r<70 && g<70 && b<70) idx=0; // сиёҳи тоза
+    else if(r>180 && g>180 && b>180) idx=1; // сафед
+    else if(r>120 && g>80 && b<60) idx=2; // қаҳвагӣ
+    else if(r>150 && g<100 && b<100) idx=3; // сурх
+    else if(Math.abs(r-g)<20 && Math.abs(g-b)<20) idx=4; // хокистарӣ
+    else idx=5;
+    hist[idx]++;
+  }
+  let sum=hist.reduce((a,b)=>a+b,0);
+  return hist.map(x=>x/sum);
+}
+function histSim(a,b){
+  let s=0;
+  for(let i=0;i<a.length;i++) s+=Math.min(a[i],b[i]);
+  return s; // 0 то 1
+}
+
+async function getFeatures(imgEl){
+  let cropped=cropCenter(imgEl);
+  let t=tf.browser.fromPixels(cropped);
+  let resized=tf.image.resizeBilinear(t,[224,224]);
   let emb=_imgModel.infer(resized,true);
   let arr=Array.from(await emb.data());
   t.dispose(); resized.dispose(); emb.dispose();
-  return arr;
+  let hist=getColorHist(cropped);
+  return {emb:arr, hist};
 }
 function loadImg(src){
   return new Promise(res=>{
@@ -85,50 +107,49 @@ async function searchByImage(input){
       document.getElementById('list').scrollIntoView({behavior:'smooth'});
       showYoutubeLoading();
       await preloadModel();
-      let qColor=getShoeColor(img);
-      let qEmb=await getEmbedding(img);
+      let q=await getFeatures(img);
 
       async function checkOne(p){
         let imgs=p.imgs||[];
-        let bestSim=-1;
+        let best=-1;
         for(let src of imgs.slice(0,4)){
           let cached=_embCache.get(src);
-          let pEmb, pColor;
-          if(cached){ pEmb=cached.emb; pColor=cached.color; }
+          let f;
+          if(cached) f=cached;
           else{
             let pim=await loadImg(src);
             if(!pim) continue;
-            pColor=getShoeColor(pim);
-            pEmb=await getEmbedding(pim);
-            _embCache.set(src, {emb:pEmb, color:pColor});
+            f=await getFeatures(pim);
+            _embCache.set(src, f);
           }
-          let sim=cosine(qEmb,pEmb);
-          if(qColor=='black' && pColor=='white') sim-=0.15;
-          if(qColor=='white' && pColor=='black') sim-=0.15;
-          if(qColor==pColor) sim+=0.05;
-          if(sim>bestSim) bestSim=sim;
+          let embSim=cosine(q.emb, f.emb);
+          let colSim=histSim(q.hist, f.hist);
+          // 70% шакл + 30% ранг - агар ҳарду монанд набошад, намебарояд
+          let sim = embSim*0.7 + colSim*0.3;
+          if(sim>best) best=sim;
         }
-        if(bestSim==-1) return null;
-        return {p, sim:bestSim};
+        if(best==-1) return null;
+        return {p, sim:best};
       }
 
       let scored=[];
-      for(let i=0;i<products.length;i+=8){
-        let results=await Promise.all(products.slice(i,i+8).map(checkOne));
+      // Бигзор 30 сония шавад - 2-то якҷо, аммо дуруст
+      for(let i=0;i<products.length;i+=2){
+        let results=await Promise.all(products.slice(i,i+2).map(checkOne));
         scored.push(...results.filter(Boolean));
       }
       scored.sort((a,b)=> b.sim - a.sim);
-      console.log('TOP:', scored.slice(0,6).map(s=>s.p.name+'='+s.sim.toFixed(2)));
+      console.log('TOP:', scored.slice(0,5).map(s=>s.p.name+'='+s.sim.toFixed(3)));
 
-      // ДУРУСТАШ: Фақат монандҳо - 0.72 боло. Агар 1-то бошад 1-то, агар 2-то бошад 2-то.
-      let top=scored.filter(s=> s.sim > 0.72).slice(0,6);
+      // ҚАТЪӢ: Фақат 0.88 боло - агар 1-то бошад 1-то, агар 2-то бошад 2-то, агар набошад - ёфт нашуд
+      let top=scored.filter(s=> s.sim > 0.88).slice(0,6);
 
       if(top.length==0){
-        document.getElementById('list').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:30px">😕 Моли монанд ёфт нашуд.<br>Акси равшантар гузор.<br><br><button onclick="clearImageSearch()" style="background:#7c3aed;color:#fff;border:none;padding:10px 20px;border-radius:20px;font-weight:bold">Ҳамаи молҳоро бубин</button></div>';
+        document.getElementById('list').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:30px">😕 Моли айнан монанд ёфт нашуд.<br>Акси аз наздик ва аз пеш, бе пол гузор.<br><br><button onclick="clearImageSearch()" style="background:#7c3aed;color:#fff;border:none;padding:10px 20px;border-radius:20px;font-weight:bold">Ҳамаи молҳоро бубин</button></div>';
         document.getElementById('pagination').innerHTML='';
       } else {
         document.getElementById('list').innerHTML=top.map(s=>cardHtml(s.p, products.indexOf(s.p))).join("");
-        document.getElementById('pagination').innerHTML='<div style="font-size:13px;color:#666">✅ '+top.length+' моли монанд ёфт шуд</div><button onclick="clearImageSearch()" style="background:#eee;border:none;padding:8px 16px;border-radius:20px;font-weight:bold">✕ Тоза кардан</button>';
+        document.getElementById('pagination').innerHTML='<div style="font-size:13px;color:#666">✅ '+top.length+' моли айнан монанд ёфт шуд</div><button onclick="clearImageSearch()" style="background:#eee;border:none;padding:8px 16px;border-radius:20px;font-weight:bold">✕ Тоза кардан</button>';
       }
     }catch(e){ console.log(e); render(); }
   };
@@ -136,4 +157,4 @@ async function searchByImage(input){
 function clearImageSearch(){
   document.getElementById('imgSearchInput').value='';
   currentPage=1; render();
-  }
+    }
