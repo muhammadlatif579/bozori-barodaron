@@ -158,10 +158,38 @@ function saveToken(){ghToken=document.getElementById("gh_token").value.trim();lo
 function updateTokenStatus(){let el=document.getElementById("tokenStatus");if(el)el.innerHTML=ghToken?"✅ Калид ҳаст!":"❌ Калид нест!";}
 async function uploadImageToGitHub(dataUrl,name){let base64=dataUrl.includes(',')?dataUrl.split(',')[1]:dataUrl;let fileName='images/'+Date.now()+'_'+Math.floor(Math.random()*100000)+'.jpg';let put=await fetch(`https://api.github.com/repos/${REPO}/contents/`+fileName,{method:'PUT',headers:{'Authorization':'token '+ghToken,'Content-Type':'application/json'},body:JSON.stringify({message:'Расм '+name,content:base64})});if(put.ok){return `https://raw.githubusercontent.com/${REPO}/main/`+fileName;}else{return dataUrl;}}
 async function saveToGitHub(){if(!ghToken){alert("Аввал Калиди GitHub-ро гузор!");return false;}document.getElementById("saveStatus").innerText="⏳ Сахра... "+products.length+" мол";try{let chunkSize=500;let chunks=Math.ceil(products.length/chunkSize)||1;for(let i=1;i<=chunks;i++){let part=products.slice((i-1)*chunkSize,i*chunkSize).map(p=>({imgCode:p.imgCode||makeImgCode(p),id:p.id||newId(),name:p.name,price:p.price,oldPrice:p.oldPrice||null,cat:p.cat,imgs:p.imgs,img:p.imgs[0]}));let fileName='products_'+i+'.json';let sha=null;try{let r=await fetch(`https://api.github.com/repos/${REPO}/contents/`+fileName,{headers:{'Authorization':'token '+ghToken}});if(r.ok){let d=await r.json();sha=d.sha;}}catch(e){}let content=btoa(unescape(encodeURIComponent(JSON.stringify(part))));let body={message:'Молҳо '+i+' - '+products.length,content:content};if(sha)body.sha=sha;await fetch(`https://api.github.com/repos/${REPO}/contents/`+fileName,{method:'PUT',headers:{'Authorization':'token '+ghToken,'Content-Type':'application/json'},body:JSON.stringify(body)});}let idxContent=btoa(unescape(encodeURIComponent(JSON.stringify({total:products.length,chunks:chunks}))));let idxSha=null;try{let r=await fetch(`https://api.github.com/repos/${REPO}/contents/products_index.json`,{headers:{'Authorization':'token '+ghToken}});if(r.ok){idxSha=(await r.json()).sha;}}catch(e){}let idxBody={message:'Индекс',content:idxContent};if(idxSha)idxBody.sha=idxSha;await fetch(`https://api.github.com/repos/${REPO}/contents/products_index.json`,{method:'PUT',headers:{'Authorization':'token '+ghToken,'Content-Type':'application/json'},body:JSON.stringify(idxBody)});document.getElementById("saveStatus").innerText="✅ ШУД! "+products.length+" мол сахра шуд!";return true;}catch(e){document.getElementById("saveStatus").innerText="❌ Хатогӣ!";return false;}}
-// ===== АВТОМАТИ EMBEDDINGS - ОҒОЗ =====
+// ===== АВТОМАТИ EMBEDDINGS НАВ v12 - ИСЛОҲШУДА, КУҲНАРО НЕСТ НАМЕКУНАД =====
 let _autoExtractor=null;
 async function getAutoExtractor(){if(_autoExtractor)return _autoExtractor;const {pipeline}=await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');_autoExtractor=await pipeline('image-feature-extraction','Xenova/clip-vit-base-patch32');return _autoExtractor;}
-async function autoUpdateEmbeddingsForNewProduct(newProduct){try{if(!ghToken)return;document.getElementById("saveStatus").innerText="⏳ Ҷустуҷӯи акс тайёр карда истодааст...";const extractor=await getAutoExtractor();const out=await extractor(newProduct.imgs[0]);const emb=Array.from(out.data);let oldEmb={};let sha=null;try{let r=await fetch(`https://api.github.com/repos/${REPO}/contents/embeddings.json`,{headers:{'Authorization':'token '+ghToken}});if(r.ok){let d=await r.json();sha=d.sha;oldEmb=JSON.parse(decodeURIComponent(escape(atob(d.content))));}}catch(e){}const key=newProduct.id||newProduct.imgCode||newProduct.name;oldEmb[key]=emb;if(newProduct.imgCode)oldEmb[newProduct.imgCode]=emb;let content=btoa(unescape(encodeURIComponent(JSON.stringify(oldEmb))));let body={message:'Auto embeddings - '+newProduct.name,content:content};if(sha)body.sha=sha;await fetch(`https://api.github.com/repos/${REPO}/contents/embeddings.json`,{method:'PUT',headers:{'Authorization':'token '+ghToken,'Content-Type':'application/json'},body:JSON.stringify(body)});document.getElementById("saveStatus").innerText="✅ ШУД! Мол + Ҷустуҷӯи акс тайёр!";}catch(e){console.log('Auto embeddings хато:',e);document.getElementById("saveStatus").innerText="✅ Мол сахра шуд! (Ҷустуҷӯи акс дафъаи аввал каме дертар мешавад)";}}
+async function autoUpdateEmbeddingsForNewProduct(newProduct){
+  try{
+    if(!ghToken) return;
+    document.getElementById("saveStatus").innerText="⏳ Ҷустуҷӯи акс тайёр карда истодааст...";
+    const extractor=await getAutoExtractor();
+    const out=await extractor(newProduct.imgs[0]);
+    const emb=Array.from(out.data);
+    // МУҲИМ: Куҳнаро аз RAW мегирем, на аз API - то бурида нашавад, гум нашавад!
+    let oldEmb={};
+    try{
+      let rr=await fetch('https://raw.githubusercontent.com/'+REPO+'/main/embeddings.json?t='+Date.now());
+      if(rr.ok) oldEmb=await rr.json();
+    }catch(e){ oldEmb={}; }
+    const key=newProduct.id||newProduct.imgCode||newProduct.name;
+    oldEmb[key]=emb;
+    if(newProduct.imgCode) oldEmb[newProduct.imgCode]=emb;
+    // SHA-ро барои сахра кардан аз API мегирем
+    let sha=null;
+    try{ let r=await fetch(`https://api.github.com/repos/${REPO}/contents/embeddings.json`,{headers:{'Authorization':'token '+ghToken}}); if(r.ok){ sha=(await r.json()).sha; } }catch(e){}
+    let content=btoa(unescape(encodeURIComponent(JSON.stringify(oldEmb))));
+    let body={message:'Auto embeddings v12 - '+newProduct.name,content:content};
+    if(sha) body.sha=sha;
+    await fetch(`https://api.github.com/repos/${REPO}/contents/embeddings.json`,{method:'PUT',headers:{'Authorization':'token '+ghToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    document.getElementById("saveStatus").innerText="✅ ШУД! Мол + Ҷустуҷӯи акс тайёр!";
+  }catch(e){
+    console.log('Auto embeddings хато:',e);
+    document.getElementById("saveStatus").innerText="✅ Мол сахра шуд! (Ҷустуҷӯи аксро бо generate.html нав кун)";
+  }
+}
 // ===== АВТОМАТИ EMBEDDINGS - АНҶОМ =====
 async function addProduct(){let name=document.getElementById("aName").value.trim();let price=document.getElementById("aPrice").value;let oldPrice=document.getElementById("aOldPrice").value;let cat=document.getElementById("aCat").value;if(!name||!price){alert("Ном ва нархро нависон!");return;}if(tempImgs.length==0){alert("Расмро интихоб кун!");return;}document.getElementById("saveStatus").innerText="⏳ Расмҳо бор карда истодаанд...";let finalImgs=[];for(let i=0;i<tempImgs.length;i++){let img=tempImgs[i];if(img.startsWith("http")||img.startsWith("IMG-")){finalImgs.push(img);}else{let url=await uploadImageToGitHub(img,name);finalImgs.push(url);}}let code=imgCode(finalImgs[0]);let newP={imgCode:code,id:newId(),name:name,price:Number(price),oldPrice:oldPrice?Number(oldPrice):null,cat:cat,imgs:finalImgs};products.push(newP);render();renderAdminList();document.getElementById("aName").value="";document.getElementById("aPrice").value="";document.getElementById("aOldPrice").value="";document.getElementById("aFiles").value="";document.getElementById("previewBox").innerHTML="";tempImgs=[];tempFiles=[];await saveToGitHub();await autoUpdateEmbeddingsForNewProduct(newP);}
 function editProduct(i){let p=products[i];document.getElementById("aName").value=p.name;document.getElementById("aPrice").value=p.price;document.getElementById("aOldPrice").value=p.oldPrice||"";document.getElementById("aCat").value=p.cat;tempImgs=[...p.imgs];document.getElementById("previewBox").innerHTML=tempImgs.map(s=>`<img src="${s}" class="thumb">`).join("");products.splice(i,1);render();renderAdminList();window.scrollTo(0,0);alert("Хозир боло - иваз кун - ва Илова кардан-ро пахш кун!");}
@@ -172,5 +200,5 @@ document.addEventListener("DOMContentLoaded",()=>{let zb=document.getElementById
 async function loadAllProducts(){try{let idxRes=await fetch('https://raw.githubusercontent.com/'+REPO+'/main/products_index.json?t='+Date.now());if(idxRes.ok){let idx=await idxRes.json();let all=[];for(let i=1;i<=idx.chunks;i++){let r=await fetch('https://raw.githubusercontent.com/'+REPO+'/main/products_'+i+'.json?t='+Date.now());let part=await r.json();all=all.concat(part);}if(all.length>0){products=all.map((p,idx2)=>ensureImgCode({imgCode:p.imgCode,id:p.id,name:p.name,price:p.price,oldPrice:p.oldPrice||null,cat:p.cat,imgs:p.imgs?p.imgs:[p.img]},idx2));document.getElementById("sync").innerText="✅ "+products.length+" "+T[LANG].syncCount;render();return;}}}catch(e){document.getElementById("sync").innerText="⚠️ Интернет нест";}}
 document.getElementById("cnt").innerText = cart.length; document.getElementById("favCnt").innerText = favs.length; loadAllProducts(); renderCats();render();setLang(LANG);
 </script>
-<script src="image-search.js?v=10"></script>
+<script src="image-search.js?v=12"></script>
 </body></html>
