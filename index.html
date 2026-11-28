@@ -172,5 +172,5 @@ document.addEventListener("DOMContentLoaded",()=>{let zb=document.getElementById
 async function loadAllProducts(){try{let idxRes=await fetch('https://raw.githubusercontent.com/'+REPO+'/main/products_index.json?t='+Date.now());if(idxRes.ok){let idx=await idxRes.json();let all=[];for(let i=1;i<=idx.chunks;i++){let r=await fetch('https://raw.githubusercontent.com/'+REPO+'/main/products_'+i+'.json?t='+Date.now());let part=await r.json();all=all.concat(part);}if(all.length>0){products=all.map((p,idx2)=>ensureImgCode({imgCode:p.imgCode,id:p.id,name:p.name,price:p.price,oldPrice:p.oldPrice||null,cat:p.cat,imgs:p.imgs?p.imgs:[p.img]},idx2));document.getElementById("sync").innerText="✅ "+products.length+" "+T[LANG].syncCount;render();return;}}}catch(e){document.getElementById("sync").innerText="⚠️ Интернет нест";}}
 document.getElementById("cnt").innerText = cart.length; document.getElementById("favCnt").innerText = favs.length; loadAllProducts(); renderCats();render();setLang(LANG);
 </script>
-<script src="image-search.js?v=7"></script>
+<script src="image-search.js?v=10"></script>
 </body></html>
